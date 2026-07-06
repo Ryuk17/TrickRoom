@@ -18,8 +18,8 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_PREFIX_PATH 
-    "${PROJECT_SOURCE_DIR}/third_libs/abseil-cpp/install" 
+set(CMAKE_PREFIX_PATH
+    "${PROJECT_SOURCE_DIR}/third_party/abseil-cpp/install"
     ${CMAKE_PREFIX_PATH}
 )
 
@@ -30,7 +30,8 @@ option(BUILD_TEST_ANR "Whether to build anr unitest" OFF)
 option(BUILD_TEST_VAD "Whether to build vad unitest" OFF)
 option(BUILD_TEST_AECM "Whether to build aecm unitest" OFF)
 option(BUILD_TEST_AEC3 "Whether to build aec3 unitest" OFF)
-option(BUILD_TEST_AGC_LEGACY "Whether to build agc_legacy unitest" ON)
+option(BUILD_TEST_AGC_LEGACY "Whether to build agc_legacy unitest" OFF)
+option(BUILD_TEST_AGC2 "Whether to build agc2 unitest" ON)
 
 
 if(BUILD_TEST_WAVE_IO)
@@ -63,6 +64,11 @@ endif()
 if(BUILD_TEST_AGC_LEGACY)
     include(cmake/test_agc_legacy.cmake)
     add_agc_legacy_test_module()
+endif()
+
+if(BUILD_TEST_AGC2)
+    include(cmake/test_agc2.cmake)
+    add_agc2_test_module()
 endif()
 
 
