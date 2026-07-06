@@ -31,7 +31,8 @@ option(BUILD_TEST_VAD "Whether to build vad unitest" OFF)
 option(BUILD_TEST_AECM "Whether to build aecm unitest" OFF)
 option(BUILD_TEST_AEC3 "Whether to build aec3 unitest" OFF)
 option(BUILD_TEST_AGC_LEGACY "Whether to build agc_legacy unitest" OFF)
-option(BUILD_TEST_AGC2 "Whether to build agc2 unitest" ON)
+option(BUILD_TEST_AGC2 "Whether to build agc2 unitest" OFF)
+option(BUILD_TEST_RESAMPLE "Whether to build resample unitest" ON)
 
 
 if(BUILD_TEST_WAVE_IO)
@@ -69,6 +70,11 @@ endif()
 if(BUILD_TEST_AGC2)
     include(cmake/test_agc2.cmake)
     add_agc2_test_module()
+endif()
+
+if(BUILD_TEST_RESAMPLE)
+    include(cmake/test_resample.cmake)
+    add_resample_test_module()
 endif()
 
 
