@@ -2,6 +2,7 @@ function(add_aecm_test_module)
     set(LIB_NAME "aecm")
 
     add_library(${LIB_NAME} STATIC 
+        "${PROJECT_SOURCE_DIR}/rtc_base/strings/string_builder.cc"
         "${PROJECT_SOURCE_DIR}/common_audio/dr_wav_impl.cc"
         "${PROJECT_SOURCE_DIR}/common_audio/audio_util.cc"
         "${PROJECT_SOURCE_DIR}/common_audio/ring_buffer.c"
@@ -22,24 +23,15 @@ function(add_aecm_test_module)
         "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/downsample_fast_neon.c"
         "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/downsample_fast_mips.c"
         "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/downsample_fast.c" 
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/cross_correlation_neon.c"   
         "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/cross_correlation_mips.c"
         "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/cross_correlation.c"
 
         "${PROJECT_SOURCE_DIR}/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor_mips.c"
         "${PROJECT_SOURCE_DIR}/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor.c"
 
-        "${PROJECT_SOURCE_DIR}/rtc_base/checks.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/logging.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/time_utils.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/cpu_info.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/platform_thread_types.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/platform_thread.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/string_encode.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/string_utils.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/system_time.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/strings/string_builder.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/memory/aligned_malloc.cc"
 
         "${PROJECT_SOURCE_DIR}/system_wrappers/source/clock.cc"
 

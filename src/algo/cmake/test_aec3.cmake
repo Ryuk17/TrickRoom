@@ -34,6 +34,8 @@ function(add_aec3_test_module)
 
 
     add_library(${LIB_NAME} STATIC 
+        "${PROJECT_SOURCE_DIR}/rtc_base/experiments/field_trial_parser.cc"
+        "${PROJECT_SOURCE_DIR}/rtc_base/strings/string_builder.cc"
         "${PROJECT_SOURCE_DIR}/common_audio/dr_wav_impl.cc"
         "${PROJECT_SOURCE_DIR}/common_audio/audio_util.cc"
         "${PROJECT_SOURCE_DIR}/common_audio/real_fourier_ooura.cc"
@@ -54,26 +56,17 @@ function(add_aec3_test_module)
         "${PROJECT_SOURCE_DIR}/api/task_queue/default_task_queue_factory_stdlib.cc"
         "${PROJECT_SOURCE_DIR}/api/task_queue/task_queue_base.cc"
 
-        "${PROJECT_SOURCE_DIR}/rtc_base/checks.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/logging.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/time_utils.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/cpu_info.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/event.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/platform_thread_types.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/platform_thread.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/string_encode.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/string_utils.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/race_checker.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/task_queue_stdlib.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/system_time.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/strings/string_builder.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/memory/aligned_malloc.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/experiments/field_trial_parser.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/synchronization/yield_policy.cc"
         
 
         "${PROJECT_SOURCE_DIR}/system_wrappers/source/clock.cc"
-        "${PROJECT_SOURCE_DIR}/system_wrappers/source/metrics.cc"
 
         "${PROJECT_SOURCE_DIR}/modules/audio_processing/audio_buffer.cc"
         "${PROJECT_SOURCE_DIR}/modules/audio_processing/splitting_filter.cc"

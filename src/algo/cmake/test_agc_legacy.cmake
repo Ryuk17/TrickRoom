@@ -3,6 +3,7 @@ function(add_agc_legacy_test_module)
     add_definitions(-DWEBRTC_APM_DEBUG_DUMP=0)
 
     add_library(${LIB_NAME} STATIC 
+        "${PROJECT_SOURCE_DIR}/rtc_base/strings/string_builder.cc"
         "${PROJECT_SOURCE_DIR}/common_audio/dr_wav_impl.cc"
         "${PROJECT_SOURCE_DIR}/common_audio/audio_util.cc"
         "${PROJECT_SOURCE_DIR}/common_audio/real_fourier_ooura.cc"
@@ -21,17 +22,9 @@ function(add_agc_legacy_test_module)
         "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/spl_sqrt.c"
         "${PROJECT_SOURCE_DIR}/common_audio/third_party/ooura/fft_size_256/fft4g.cc"
 
-        "${PROJECT_SOURCE_DIR}/rtc_base/checks.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/logging.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/time_utils.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/cpu_info.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/platform_thread_types.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/platform_thread.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/string_encode.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/string_utils.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/system_time.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/strings/string_builder.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/memory/aligned_malloc.cc"
 
         "${PROJECT_SOURCE_DIR}/system_wrappers/source/clock.cc"
     )

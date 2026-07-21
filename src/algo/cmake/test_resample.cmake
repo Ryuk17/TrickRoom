@@ -2,6 +2,7 @@ function(add_resample_test_module)
     set(LIB_NAME "resample_test_lib")
 
     add_library(${LIB_NAME} STATIC
+        "${PROJECT_SOURCE_DIR}/rtc_base/strings/string_builder.cc"
         "${PROJECT_SOURCE_DIR}/common_audio/dr_wav_impl.cc"
         "${PROJECT_SOURCE_DIR}/common_audio/audio_util.cc"
 
@@ -26,17 +27,9 @@ function(add_resample_test_module)
 
         "${PROJECT_SOURCE_DIR}/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor.c"
 
-        "${PROJECT_SOURCE_DIR}/rtc_base/checks.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/logging.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/time_utils.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/string_encode.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/string_utils.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/system_time.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/strings/string_builder.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/memory/aligned_malloc.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/cpu_info.cc"
         "${PROJECT_SOURCE_DIR}/rtc_base/platform_thread_types.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/platform_thread.cc"
         "${PROJECT_SOURCE_DIR}/api/units/timestamp.cc"
 
         "${PROJECT_SOURCE_DIR}/system_wrappers/source/clock.cc"

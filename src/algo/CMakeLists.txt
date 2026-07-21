@@ -25,6 +25,9 @@ set(CMAKE_PREFIX_PATH
 
 find_package(absl REQUIRED)
 
+# Disable WebRTC metrics (no-op stubs)
+add_definitions(-DRTC_DISABLE_METRICS)
+
 option(BUILD_TEST_WAVE_IO "Whether to build wav io unitest" OFF)
 option(BUILD_TEST_ANR "Whether to build anr unitest" OFF)
 option(BUILD_TEST_VAD "Whether to build vad unitest" OFF)
