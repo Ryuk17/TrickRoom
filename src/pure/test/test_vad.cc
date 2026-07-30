@@ -1,6 +1,13 @@
+/*
+ * @Author: Ryuk
+ * @Date: 2026-07-27 22:42:40
+ * @LastEditors: Ryuk
+ * @LastEditTime: 2026-07-29 23:09:20
+ * @Description: First create
+ */
 #include <iostream>
-#include "common_audio/dr_wav.h"
-#include "modules/audio_processing/vad/voice_activity_detector.h"
+#include "utils/dr_wav.h"
+#include "audio_processing/vad/voice_activity_detector.h"
 
 #define FRAME_LEN (160)
 
@@ -8,7 +15,7 @@ using namespace webrtc;
 
 int main(int argc, char **argv) 
 {
-    char wav_file[1024] = "data/voice_engine/audio_short16.wav";
+    char wav_file[1024] = "data/audio_short16.wav";
 
     DrWavReader wav_reader(wav_file);
     std::cout<< "sample_rate: " << wav_reader.sample_rate() << std::endl;
@@ -16,7 +23,7 @@ int main(int argc, char **argv)
     std::cout<< "read samples: " << wav_reader.num_samples() << std::endl;
 
     DrWavWriter wav_writer(
-        "data/voice_engine/audio_short16_vad_out.wav", 
+        "data/audio_short16_vad_out.wav", 
         wav_reader.sample_rate(),
         wav_reader.num_channels()    );
 

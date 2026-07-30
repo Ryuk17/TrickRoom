@@ -1,3 +1,10 @@
+<!--
+ * @Author: Ryuk
+ * @Date: 2026-07-27 22:56:46
+ * @LastEditors: Ryuk
+ * @LastEditTime: 2026-07-30 23:08:45
+ * @Description: First create
+-->
 # 功能
 - `src\pure`是为了实现源代码轻量化的工程，旨在`src\algo`中算法核心实现代码抽取，只保留核心部分代码
 - 为了保证代码抽取的有效性，改动前请先指定计划，待我review后再执行
@@ -27,5 +34,8 @@ cmake .. -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE=../toolchains/x86_64-window
 `toolchains`: 编译相关toolchains    
 `utils`: 算法依赖的公共代码(与计算无关)  
 `CMakeLists.txt`: 算法编译CMakeLists.txt
+
+# 改动约束
+- 所有fft必须使用`src\pure\common\neon_fft`
 
 
