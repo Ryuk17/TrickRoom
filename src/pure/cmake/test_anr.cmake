@@ -1,64 +1,87 @@
 function(add_anr_test_module)
-    set(LIB_NAME "anr")
+    set(LIB_NAME "anr_test_lib")
 
-    add_library(${LIB_NAME} STATIC 
-        "${PROJECT_SOURCE_DIR}/rtc_base/strings/string_builder.cc"
-        "${PROJECT_SOURCE_DIR}/common_audio/dr_wav_impl.cc"
-        "${PROJECT_SOURCE_DIR}/common_audio/audio_util.cc"
-        "${PROJECT_SOURCE_DIR}/common_audio/real_fourier_ooura.cc"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/splitting_filter.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/third_party/ooura/fft_size_256/fft4g.cc"
+    add_library(${LIB_NAME} STATIC
+        # WAV I/O utilities
+        "${PROJECT_SOURCE_DIR}/utils/dr_wav.cc"
+        "${PROJECT_SOURCE_DIR}/utils/audio_util.cc"
 
-        "${PROJECT_SOURCE_DIR}/rtc_base/time_utils.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/platform_thread_types.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/system_time.cc"
+        # NE10 FFT (generic C implementation)
+        "${PROJECT_SOURCE_DIR}/common/neon_fft/src/NE10_fft.c"
+        "${PROJECT_SOURCE_DIR}/common/neon_fft/src/NE10_fft_float32.c"
+        "${PROJECT_SOURCE_DIR}/common/neon_fft/src/NE10_fft_generic_float32.c"
+        "${PROJECT_SOURCE_DIR}/common/neon_fft/src/NE10_rfft_float32.c"
 
-        "${PROJECT_SOURCE_DIR}/system_wrappers/source/clock.cc"
+        # Signal processing library (splitting filters etc.)
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/splitting_filter.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/energy.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_fractional.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_48khz.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_by_2.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_by_2_internal.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/division_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/get_scaling_square.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/min_max_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_init.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_inl.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/vector_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/copy_set_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/downsample_fast.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/filter_ar.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/vector_scaling_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/dot_product_with_scale.cc"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_sqrt.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_sqrt_floor.c"
 
-        "${PROJECT_SOURCE_DIR}/modules/audio_processing/audio_buffer.cc"
-        "${PROJECT_SOURCE_DIR}/modules/audio_processing/splitting_filter.cc"
-        "${PROJECT_SOURCE_DIR}/modules/audio_processing/three_band_filter_bank.cc"
+        # AudioBuffer + splitting + three band filter bank
+        "${PROJECT_SOURCE_DIR}/common/audio_buffer.cc"
+        "${PROJECT_SOURCE_DIR}/common/splitting_filter.cc"
+        "${PROJECT_SOURCE_DIR}/common/three_band_filter_bank.cc"
     )
 
-    file(GLOB ANR_SRC "${PROJECT_SOURCE_DIR}/modules/audio_processing/ns/*.cc")
-    file(GLOB RESAMPLE_SRC "${PROJECT_SOURCE_DIR}/common_audio/resampler/*.cc")
+    # Noise suppressor sources
+    file(GLOB NS_SRC "${PROJECT_SOURCE_DIR}/audio_processing/ns/*.cc")
+    target_sources(${LIB_NAME} PRIVATE ${NS_SRC})
 
-    target_sources(${LIB_NAME} PRIVATE 
-        ${ANR_SRC}
-        ${RESAMPLE_SRC}
-    )
+    # Resampler sources (used by AudioBuffer)
+    file(GLOB RESAMPLER_SRC "${PROJECT_SOURCE_DIR}/audio_processing/resample/*.cc")
+    list(FILTER RESAMPLER_SRC EXCLUDE REGEX ".*_neon\\.cc$")
+    target_sources(${LIB_NAME} PRIVATE ${RESAMPLER_SRC})
 
-    # 设置该库所需的头文件路径
-    target_include_directories(${LIB_NAME} PUBLIC 
-        "${PROJECT_SOURCE_DIR}/"
-        "${PROJECT_SOURCE_DIR}/rtc_base/"
-        "${PROJECT_SOURCE_DIR}/system_wrappers/include/"
-        "${PROJECT_SOURCE_DIR}/common_audio/resampler/include/"
+    # Include directories
+    target_include_directories(${LIB_NAME} PUBLIC
+        "${PROJECT_SOURCE_DIR}"
+        "${PROJECT_SOURCE_DIR}/utils/"
+        "${PROJECT_SOURCE_DIR}/audio_processing/resample/"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/include/"
+        "${PROJECT_SOURCE_DIR}/common/neon_fft/include/"
         "${CMAKE_PREFIX_PATH}/include/"
     )
 
-    # --- 2. 定义测试可执行程序 ---
-    set(TEST_NAME "test_anr")
-    
-    add_executable(${TEST_NAME} "${PROJECT_SOURCE_DIR}/test/test_anr.cc")
+    # Link abseil for header access
+    target_link_libraries(${LIB_NAME} PUBLIC absl::strings)
 
+    # --- Test executable ---
+    set(TEST_NAME "test_anr")
+
+    add_executable(${TEST_NAME} "${PROJECT_SOURCE_DIR}/test/test_anr.cc")
 
     if(WIN32)
         if(MINGW)
-            target_link_libraries(${TEST_NAME} PRIVATE 
+            target_link_libraries(${TEST_NAME} PRIVATE
                 ${LIB_NAME}
                 absl::strings
                 winmm
             )
         endif()
     else()
-        target_link_libraries(${TEST_NAME} PRIVATE 
+        target_link_libraries(${TEST_NAME} PRIVATE
             ${LIB_NAME}
             absl::strings
         )
     endif()
-
-
 
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
 endfunction()
