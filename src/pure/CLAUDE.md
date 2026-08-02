@@ -2,7 +2,7 @@
  * @Author: Ryuk
  * @Date: 2026-07-27 22:56:46
  * @LastEditors: Ryuk
- * @LastEditTime: 2026-07-30 23:08:45
+ * @LastEditTime: 2026-08-02 13:07:03
  * @Description: First create
 -->
 # 功能
@@ -37,5 +37,7 @@ cmake .. -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE=../toolchains/x86_64-window
 
 # 改动约束
 - 所有fft必须使用`src\pure\common\neon_fft`
+- pure中算法输出结果必须与algo中相同算法输出结果一样
+- 提交修改请调用`git-commit` skill
 
 
