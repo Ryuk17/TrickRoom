@@ -4,21 +4,21 @@
 #include <memory>
 #include <vector>
 
-#include "common_audio/dr_wav.h"
-#include "common_audio/include/audio_util.h"
-#include "modules/audio_processing/agc2/adaptive_digital_gain_controller.h"
-#include "modules/audio_processing/agc2/speech_level_estimator.h"
-#include "modules/audio_processing/agc2/noise_level_estimator.h"
-#include "modules/audio_processing/agc2/vad_wrapper.h"
-#include "modules/audio_processing/agc2/cpu_features.h"
-#include "modules/audio_processing/agc2/agc2_common.h"
-#include "modules/audio_processing/logging/apm_data_dumper.h"
+#include "utils/dr_wav.h"
+#include "utils/audio_util.h"
+#include "audio_processing/agc2/adaptive_digital_gain_controller.h"
+#include "audio_processing/agc2/speech_level_estimator.h"
+#include "audio_processing/agc2/noise_level_estimator.h"
+#include "audio_processing/agc2/vad_wrapper.h"
+#include "audio_processing/agc2/cpu_features.h"
+#include "audio_processing/agc2/agc2_common.h"
+#include "utils/apm_data_dumper.h"
 
 using namespace webrtc;
 
 int main(int argc, char **argv)
 {
-    char wav_file[1024] = "data/voice_engine/audio_short16.wav";
+    char wav_file[1024] = "data/audio_short16.wav";
 
     DrWavReader wav_reader(wav_file);
     auto rate = wav_reader.sample_rate();
@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     std::cout << "samples_per_channel (10ms): " << samples_per_channel << std::endl;
 
     DrWavWriter wav_writer(
-        "data/voice_engine/audio_short16_agc2_out.wav",
+        "data/audio_short16_agc2_out.wav",
         rate, num_channels    );
 
     // Setup AGC2 components
@@ -68,8 +68,14 @@ int main(int argc, char **argv)
     while(true)
     {
         int read_samples = wav_reader.ReadSamples(frame_size, wav_data.data());
+        if(read_samples == 0) break;
 
-        if(read_samples < samples_per_channel) break;
+        // Zero-pad partial final frame to full frame size.
+        bool is_partial = (read_samples < frame_size);
+        if(is_partial) {
+            std::fill(wav_data.begin() + read_samples, wav_data.end(), 0);
+            read_samples = frame_size;
+        }
 
         int samples_this_frame = read_samples / num_channels;
 
@@ -121,9 +127,6 @@ int main(int argc, char **argv)
 
         total_samples += read_samples;
         total_frames++;
-
-        if(read_samples < frame_size)
-            break;
     }
 
     std::cout << "total frames processed: " << total_frames << std::endl;

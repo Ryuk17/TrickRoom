@@ -4,6 +4,10 @@
 #include <cstdlib>
 #include <memory>
 
+#if defined(_WIN32)
+#include <malloc.h>
+#endif
+
 namespace webrtc {
 
 inline void* AlignedMalloc(size_t size, size_t alignment) {

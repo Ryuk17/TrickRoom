@@ -34,6 +34,13 @@ constexpr D saturated_cast(S value) {
   }
 }
 
+// dchecked_cast: like static_cast but with a consistency check in debug mode.
+// In the pure build this is a simple static_cast (no RTC_DCHECK available).
+template <typename Dst, typename Src>
+inline constexpr Dst dchecked_cast(Src value) {
+  return static_cast<Dst>(value);
+}
+
 }  // namespace webrtc
 
 #endif  // RTC_BASE_NUMERICS_SAFE_CONVERSIONS_H_
