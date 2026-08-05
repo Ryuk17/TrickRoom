@@ -113,6 +113,7 @@ inline T CheckedDivExact(T a, T b) {
 #define RTC_CHECK_NOTREACHED() \
   (fprintf(stderr, "NOTREACHED at %s:%d\n", __FILE__, __LINE__), abort(), (void)0)
 #define RTC_DCHECK_NOTREACHED() RTC_DCHECK(0)
+#define RTC_DCHECK_RUNS_SERIALIZED() ((void)0)
 #define RTC_FATAL() \
   (fprintf(stderr, "FATAL at %s:%d\n", __FILE__, __LINE__), abort(), (void)0)
 

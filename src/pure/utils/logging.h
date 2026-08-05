@@ -17,6 +17,7 @@ enum LoggingSeverity {
   ::webrtc::LogMessage(__FILE__, __LINE__, severity).stream()
 
 #define RTC_LOG_ERR(severity) RTC_LOG(severity)
+#define RTC_LOG_V(severity) RTC_LOG(severity)
 
 namespace webrtc {
 
