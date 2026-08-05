@@ -1,121 +1,114 @@
 function(add_aec3_test_module)
-    set(LIB_NAME "aec3")
-    add_definitions(-DWEBRTC_APM_DEBUG_DUMP=0)
+    set(LIB_NAME "aec3_test_lib")
 
-    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_library(${LIB_NAME} STATIC
+        # WAV I/O utilities
+        "${PROJECT_SOURCE_DIR}/utils/dr_wav.cc"
+        "${PROJECT_SOURCE_DIR}/utils/audio_util.cc"
+        "${PROJECT_SOURCE_DIR}/utils/string_builder.cc"
+        "${PROJECT_SOURCE_DIR}/utils/echo_canceller3_config.cc"
 
-    if(Python3_FOUND)
-        set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
-    else()
-        message(FATAL_ERROR "Python3 not found")
-    endif()
+        # Ooura FFT (128-point, used by AEC3)
+        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/ooura_fft/ooura_fft.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/ooura_fft/ooura_fft_sse2.cc"
 
-    # Set variables for the script and output directory
-    set(FT_SCRIPT_PATH "${CMAKE_SOURCE_DIR}/experiments/field_trials.py")  # Adjust the path to where the script is located
-    set(FT_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/experiments")
-    set(FT_OUTPUT_FILE "${FT_OUTPUT_DIR}/registered_field_trials.h")
-
-    # Add a custom command that generates the output file
-    add_custom_command(
-        OUTPUT ${FT_OUTPUT_FILE}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${FT_OUTPUT_DIR}
-        COMMAND ${CMAKE_COMMAND} -E env PYTHONIOENCODING=utf-8
-                ${PYTHON_EXECUTABLE} ${FT_SCRIPT_PATH} header --output ${FT_OUTPUT_FILE}
-        DEPENDS ${FT_SCRIPT_PATH}
-        COMMENT "Generating registered_field_trials.h"
-        VERBATIM
+        # Signal processing library
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_sqrt.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_sqrt_floor.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_init.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_inl.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/copy_set_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/dot_product_with_scale.cc"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/division_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/min_max_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/vector_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/vector_scaling_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/energy.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_fractional.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_48khz.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_by_2.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_by_2_internal.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/get_scaling_square.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/downsample_fast.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/filter_ar.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/splitting_filter.c"
     )
 
-    # Add a custom target that depends on the output file
-    add_custom_target(
-        GenerateFieldTrialsHeader ALL
-        DEPENDS ${FT_OUTPUT_FILE}
+    # AudioBuffer + splitting + three band filter bank
+    target_sources(${LIB_NAME} PRIVATE
+        "${PROJECT_SOURCE_DIR}/common/audio_buffer.cc"
+        "${PROJECT_SOURCE_DIR}/common/splitting_filter.cc"
+        "${PROJECT_SOURCE_DIR}/common/three_band_filter_bank.cc"
     )
 
-
-    add_library(${LIB_NAME} STATIC 
-        "${PROJECT_SOURCE_DIR}/rtc_base/experiments/field_trial_parser.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/strings/string_builder.cc"
-        "${PROJECT_SOURCE_DIR}/common_audio/dr_wav_impl.cc"
-        "${PROJECT_SOURCE_DIR}/common_audio/audio_util.cc"
-        "${PROJECT_SOURCE_DIR}/common_audio/real_fourier_ooura.cc"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/splitting_filter.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/ring_buffer.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
-        "${PROJECT_SOURCE_DIR}/common_audio/third_party/ooura/fft_size_128/ooura_fft_neon.cc"
-        "${PROJECT_SOURCE_DIR}/common_audio/third_party/ooura/fft_size_128/ooura_fft_mips.cc"
-        "${PROJECT_SOURCE_DIR}/common_audio/third_party/ooura/fft_size_128/ooura_fft.cc"
-
-        "${PROJECT_SOURCE_DIR}/api/field_trials_registry.cc"
-        "${PROJECT_SOURCE_DIR}/api/audio/echo_canceller3_config.cc"
-        "${PROJECT_SOURCE_DIR}/api/audio/echo_canceller3_factory.cc"
-        "${PROJECT_SOURCE_DIR}/api/audio/echo_detector_creator.cc"
-        "${PROJECT_SOURCE_DIR}/api/environment/environment_factory.cc"
-        "${PROJECT_SOURCE_DIR}/api/environment/deprecated_global_field_trials.cc"
-        "${PROJECT_SOURCE_DIR}/api/rtc_event_log/rtc_event_log.cc"
-        "${PROJECT_SOURCE_DIR}/api/task_queue/default_task_queue_factory_stdlib.cc"
-        "${PROJECT_SOURCE_DIR}/api/task_queue/task_queue_base.cc"
-
-        "${PROJECT_SOURCE_DIR}/rtc_base/time_utils.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/event.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/platform_thread_types.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/platform_thread.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/race_checker.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/task_queue_stdlib.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/system_time.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/synchronization/yield_policy.cc"
-        
-
-        "${PROJECT_SOURCE_DIR}/system_wrappers/source/clock.cc"
-
-        "${PROJECT_SOURCE_DIR}/modules/audio_processing/audio_buffer.cc"
-        "${PROJECT_SOURCE_DIR}/modules/audio_processing/splitting_filter.cc"
-        "${PROJECT_SOURCE_DIR}/modules/audio_processing/three_band_filter_bank.cc"
-        "${PROJECT_SOURCE_DIR}/modules/audio_processing/high_pass_filter.cc"
-        "${PROJECT_SOURCE_DIR}/modules/audio_processing/utility/delay_estimator.cc"
-        "${PROJECT_SOURCE_DIR}/modules/audio_processing/utility/delay_estimator_wrapper.cc"
-        "${PROJECT_SOURCE_DIR}/modules/audio_processing/utility/cascaded_biquad_filter.cc"
-        "${PROJECT_SOURCE_DIR}/modules/audio_processing/logging/apm_data_dumper.cc"
+    # High pass filter
+    target_sources(${LIB_NAME} PRIVATE
+        "${PROJECT_SOURCE_DIR}/audio_processing/high_pass_filter.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/utility/cascaded_biquad_filter.cc"
     )
 
-    file(GLOB AEC3_SRC "${PROJECT_SOURCE_DIR}/modules/audio_processing/aec3/*.cc")
-    file(GLOB RESAMPLE_SRC "${PROJECT_SOURCE_DIR}/common_audio/resampler/*.cc")
-    target_sources(${LIB_NAME} PRIVATE 
-        ${AEC3_SRC}
-        ${RESAMPLE_SRC}
+    # AEC3 sources (all .cc files except neural residual echo estimator)
+    file(GLOB AEC3_SRC "${PROJECT_SOURCE_DIR}/audio_processing/aec3/*.cc")
+    list(FILTER AEC3_SRC EXCLUDE REGEX ".*neural_feature_extractor\\.cc$")
+    list(FILTER AEC3_SRC EXCLUDE REGEX ".*neural_residual_echo_estimator_impl\\.cc$")
+    target_sources(${LIB_NAME} PRIVATE ${AEC3_SRC})
+
+    # Resampler sources (used by AudioBuffer)
+    file(GLOB RESAMPLER_SRC "${PROJECT_SOURCE_DIR}/audio_processing/resample/*.cc")
+    list(FILTER RESAMPLER_SRC EXCLUDE REGEX ".*_neon\\.cc$")
+    target_sources(${LIB_NAME} PRIVATE ${RESAMPLER_SRC})
+
+    # SSE2 for Ooura FFT
+    set_source_files_properties(
+        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/ooura_fft/ooura_fft_sse2.cc"
+        PROPERTIES COMPILE_FLAGS "-msse2"
     )
 
-    # 设置该库所需的头文件路径
-    target_include_directories(${LIB_NAME} PUBLIC 
-        "${PROJECT_SOURCE_DIR}/"
-        "${PROJECT_SOURCE_DIR}/rtc_base/"
-        "${PROJECT_SOURCE_DIR}/system_wrappers/include/"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/include/"
+    # AVX2+FMA for AEC3 and resampler SIMD files
+    set_source_files_properties(
+        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/adaptive_fir_filter_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/adaptive_fir_filter_erl_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/fft_data_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/matched_filter_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/vector_math_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/resample/sinc_resampler_avx2.cc"
+        PROPERTIES COMPILE_FLAGS "-mavx2 -mfma"
+    )
+
+    # Include directories
+    target_include_directories(${LIB_NAME} PUBLIC
+        "${PROJECT_SOURCE_DIR}"
+        "${PROJECT_SOURCE_DIR}/utils/"
+        "${PROJECT_SOURCE_DIR}/audio_processing/resample/"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/include/"
+        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/ooura_fft/"
         "${CMAKE_PREFIX_PATH}/include/"
     )
 
-    # --- 2. 定义测试可执行程序 ---
-    set(TEST_NAME "test_aec3")
-    
-    add_executable(${TEST_NAME} "${PROJECT_SOURCE_DIR}/test/test_aec3.cc")
+    # Link abseil for header access
+    target_link_libraries(${LIB_NAME} PUBLIC absl::strings)
 
+    # --- Test executable ---
+    set(TEST_NAME "test_aec3")
+
+    add_executable(${TEST_NAME} "${PROJECT_SOURCE_DIR}/test/test_aec3.cc")
 
     if(WIN32)
         if(MINGW)
-            target_link_libraries(${TEST_NAME} PRIVATE 
+            target_link_libraries(${TEST_NAME} PRIVATE
                 ${LIB_NAME}
                 absl::strings
                 winmm
             )
         endif()
     else()
-        target_link_libraries(${TEST_NAME} PRIVATE 
+        target_link_libraries(${TEST_NAME} PRIVATE
             ${LIB_NAME}
             absl::strings
         )
     endif()
-
-
 
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
 endfunction()

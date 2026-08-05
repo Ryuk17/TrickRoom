@@ -39,6 +39,12 @@ class ApmDataDumper {
                int /*dump_set*/ = kDefaultDumpSet) {}
   void DumpRaw(absl::string_view /*name*/, ArrayView<const float> /*v*/,
                int /*dump_set*/ = kDefaultDumpSet) {}
+
+  void DumpWav(absl::string_view /*name*/, size_t /*v_length*/,
+               const float* /*v*/, int /*sample_rate_hz*/,
+               int /*num_channels*/) {}
+  void DumpWav(absl::string_view /*name*/, ArrayView<const float> /*v*/,
+               int /*sample_rate_hz*/, int /*num_channels*/) {}
 };
 
 }  // namespace webrtc

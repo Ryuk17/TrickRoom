@@ -21,6 +21,7 @@
 #ifdef __cplusplus
 
 #include <iostream>
+#include <type_traits>
 
 struct FatalLogCall {
   template <typename T>
@@ -36,12 +37,71 @@ struct FatalLogCall {
 #define RTC_CHECK(condition) \
   (condition) ? (void)0 : FatalLogCall{__FILE__, __LINE__, #condition} & std::cerr
 
-#define RTC_CHECK_EQ(v1, v2) RTC_CHECK((v1) == (v2))
-#define RTC_CHECK_NE(v1, v2) RTC_CHECK((v1) != (v2))
-#define RTC_CHECK_LE(v1, v2) RTC_CHECK((v1) <= (v2))
-#define RTC_CHECK_LT(v1, v2) RTC_CHECK((v1) < (v2))
-#define RTC_CHECK_GE(v1, v2) RTC_CHECK((v1) >= (v2))
-#define RTC_CHECK_GT(v1, v2) RTC_CHECK((v1) > (v2))
+// Safe comparison helpers — handle signed/unsigned mixed types.
+// When one operand is unsigned and the other is signed, cast the unsigned
+// value to a signed type of sufficient width to avoid negative values
+// wrapping to huge positive numbers.
+template <typename T, typename U, bool IsTU = std::is_unsigned_v<T>,
+          bool IsUU = std::is_unsigned_v<U>>
+struct SafeCmpHelper;
+
+template <typename T, typename U>
+struct SafeCmpHelper<T, U, false, false> {
+  static constexpr bool Eq(T a, U b) { return a == b; }
+  static constexpr bool Ge(T a, U b) { return a >= b; }
+  static constexpr bool Gt(T a, U b) { return a > b; }
+  static constexpr bool Le(T a, U b) { return a <= b; }
+  static constexpr bool Lt(T a, U b) { return a < b; }
+};
+
+template <typename T, typename U>
+struct SafeCmpHelper<T, U, true, false> {
+  using S = std::make_signed_t<T>;
+  static constexpr bool Eq(T a, U b) { return static_cast<S>(a) == b; }
+  static constexpr bool Ge(T a, U b) { return static_cast<S>(a) >= b; }
+  static constexpr bool Gt(T a, U b) { return static_cast<S>(a) > b; }
+  static constexpr bool Le(T a, U b) { return static_cast<S>(a) <= b; }
+  static constexpr bool Lt(T a, U b) { return static_cast<S>(a) < b; }
+};
+
+template <typename T, typename U>
+struct SafeCmpHelper<T, U, false, true> {
+  using S = std::make_signed_t<U>;
+  static constexpr bool Eq(T a, U b) { return a == static_cast<S>(b); }
+  static constexpr bool Ge(T a, U b) { return a >= static_cast<S>(b); }
+  static constexpr bool Gt(T a, U b) { return a > static_cast<S>(b); }
+  static constexpr bool Le(T a, U b) { return a <= static_cast<S>(b); }
+  static constexpr bool Lt(T a, U b) { return a < static_cast<S>(b); }
+};
+
+template <typename T, typename U>
+struct SafeCmpHelper<T, U, true, true> {
+  static constexpr bool Eq(T a, U b) { return a == b; }
+  static constexpr bool Ge(T a, U b) { return a >= b; }
+  static constexpr bool Gt(T a, U b) { return a > b; }
+  static constexpr bool Le(T a, U b) { return a <= b; }
+  static constexpr bool Lt(T a, U b) { return a < b; }
+};
+
+template <typename T, typename U>
+constexpr bool SafeCmpEq(T a, U b) { return SafeCmpHelper<T, U>::Eq(a, b); }
+template <typename T, typename U>
+constexpr bool SafeCmpNe(T a, U b) { return !(a == b); }
+template <typename T, typename U>
+constexpr bool SafeCmpLe(T a, U b) { return SafeCmpHelper<T, U>::Le(a, b); }
+template <typename T, typename U>
+constexpr bool SafeCmpLt(T a, U b) { return SafeCmpHelper<T, U>::Lt(a, b); }
+template <typename T, typename U>
+constexpr bool SafeCmpGe(T a, U b) { return SafeCmpHelper<T, U>::Ge(a, b); }
+template <typename T, typename U>
+constexpr bool SafeCmpGt(T a, U b) { return SafeCmpHelper<T, U>::Gt(a, b); }
+
+#define RTC_CHECK_EQ(v1, v2) RTC_CHECK(SafeCmpEq(v1, v2))
+#define RTC_CHECK_NE(v1, v2) RTC_CHECK(SafeCmpNe(v1, v2))
+#define RTC_CHECK_LE(v1, v2) RTC_CHECK(SafeCmpLe(v1, v2))
+#define RTC_CHECK_LT(v1, v2) RTC_CHECK(SafeCmpLt(v1, v2))
+#define RTC_CHECK_GE(v1, v2) RTC_CHECK(SafeCmpGe(v1, v2))
+#define RTC_CHECK_GT(v1, v2) RTC_CHECK(SafeCmpGt(v1, v2))
 
 #if RTC_DCHECK_IS_ON
 #define RTC_DCHECK(condition) RTC_CHECK(condition)
@@ -113,6 +173,7 @@ inline T CheckedDivExact(T a, T b) {
 #define RTC_CHECK_NOTREACHED() \
   (fprintf(stderr, "NOTREACHED at %s:%d\n", __FILE__, __LINE__), abort(), (void)0)
 #define RTC_DCHECK_NOTREACHED() RTC_DCHECK(0)
+#define RTC_DCHECK_RUNS_SERIALIZED() ((void)0)
 #define RTC_FATAL() \
   (fprintf(stderr, "FATAL at %s:%d\n", __FILE__, __LINE__), abort(), (void)0)
 
