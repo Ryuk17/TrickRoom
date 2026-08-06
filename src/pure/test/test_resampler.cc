@@ -2,7 +2,7 @@
  * @Author: Ryuk
  * @Date: 2026-07-06 22:23:48
  * @LastEditors: Ryuk
- * @LastEditTime: 2026-07-29 23:08:33
+ * @LastEditTime: 2026-08-06 00:01:05
  * @Description: First create
  */
 #include <iostream>
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
         int read_samples = wav_reader.ReadSamples(FRAME_LEN, wav_data);
 
         size_t resampled_samples = 0;
-        resampler.Process(wav_data, FRAME_LEN, resampled_data, RESAMPLED_FRAME_LEN, resampled_samples);
+        resampler.Push(wav_data, FRAME_LEN, resampled_data, RESAMPLED_FRAME_LEN, resampled_samples);
 
         wav_writer.WriteSamples(resampled_data, resampled_samples);
         total_samples += resampled_samples;

@@ -29,12 +29,12 @@ find_package(absl REQUIRED)
 add_definitions(-DRTC_DISABLE_METRICS)
 
 option(BUILD_TEST_WAVE_IO "Whether to build wav io unitest" OFF)
-option(BUILD_TEST_ANR "Whether to build anr unitest" OFF)
-option(BUILD_TEST_VAD "Whether to build vad unitest" OFF)
-option(BUILD_TEST_AECM "Whether to build aecm unitest" OFF)
-option(BUILD_TEST_AEC3 "Whether to build aec3 unitest" OFF)
-option(BUILD_TEST_AGC_LEGACY "Whether to build agc_legacy unitest" OFF)
-option(BUILD_TEST_AGC2 "Whether to build agc2 unitest" OFF)
+option(BUILD_TEST_ANR "Whether to build anr unitest" ON)
+option(BUILD_TEST_VAD "Whether to build vad unitest" ON)
+option(BUILD_TEST_AECM "Whether to build aecm unitest" ON)
+option(BUILD_TEST_AEC3 "Whether to build aec3 unitest" ON)
+option(BUILD_TEST_AGC_LEGACY "Whether to build agc_legacy unitest" ON)
+option(BUILD_TEST_AGC2 "Whether to build agc2 unitest" ON)
 option(BUILD_TEST_RESAMPLE "Whether to build resample unitest" ON)
 
 

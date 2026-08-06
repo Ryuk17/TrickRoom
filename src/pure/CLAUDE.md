@@ -2,14 +2,19 @@
  * @Author: Ryuk
  * @Date: 2026-07-27 22:56:46
  * @LastEditors: Ryuk
- * @LastEditTime: 2026-08-02 13:07:03
+ * @LastEditTime: 2026-08-05 23:56:51
  * @Description: First create
 -->
 # 功能
+目前stage 1已经完成
+## stage 1
 - `src\pure`是为了实现源代码轻量化的工程，旨在`src\algo`中算法核心实现代码抽取，只保留核心部分代码
 - 为了保证代码抽取的有效性，改动前请先指定计划，待我review后再执行
 - 不要改动除`src\pure`目录下的其他文件，缺少的代码你可以在`src\algo`中获取
 - 使用英文进行思考，使用中文进行回答
+## stage 2
+- 根据要求修改代码
+- 修改完验证可以编译，以及运行结果一致后，删除多余文件
 
 
 # 使用说明
