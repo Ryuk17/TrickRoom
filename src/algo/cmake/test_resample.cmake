@@ -2,53 +2,46 @@ function(add_resample_test_module)
     set(LIB_NAME "resample_test_lib")
 
     add_library(${LIB_NAME} STATIC
-        "${PROJECT_SOURCE_DIR}/rtc_base/strings/string_builder.cc"
-        "${PROJECT_SOURCE_DIR}/common_audio/dr_wav_impl.cc"
-        "${PROJECT_SOURCE_DIR}/common_audio/audio_util.cc"
+        "${PROJECT_SOURCE_DIR}/utils/dr_wav.cc"
+        "${PROJECT_SOURCE_DIR}/utils/audio_util.cc"
 
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/energy.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/resample.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/resample_fractional.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/resample_48khz.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/resample_by_2.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/resample_by_2_internal.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/splitting_filter.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/division_operations.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/get_scaling_square.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/min_max_operations.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/spl_init.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/spl_inl.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/vector_operations.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/copy_set_operations.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/downsample_fast.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/filter_ar.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/vector_scaling_operations.c"
-        "${PROJECT_SOURCE_DIR}/common_audio/signal_processing/dot_product_with_scale.cc"
-
-        "${PROJECT_SOURCE_DIR}/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor.c"
-
-        "${PROJECT_SOURCE_DIR}/rtc_base/time_utils.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/system_time.cc"
-        "${PROJECT_SOURCE_DIR}/rtc_base/platform_thread_types.cc"
-        "${PROJECT_SOURCE_DIR}/api/units/timestamp.cc"
-
-        "${PROJECT_SOURCE_DIR}/system_wrappers/source/clock.cc"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/energy.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_fractional.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_48khz.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_by_2.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_by_2_internal.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/splitting_filter.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/division_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/get_scaling_square.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/min_max_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_init.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_inl.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/vector_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/copy_set_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/downsample_fast.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/filter_ar.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/vector_scaling_operations.c"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/dot_product_with_scale.cc"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_sqrt_floor.c"
     )
     
 
-    # 添加 resampler 源文件
-    file(GLOB RESAMPLER_SRC "${PROJECT_SOURCE_DIR}/common_audio/resampler/*.cc")
+    # 添加 resampler 源文件（排除特定架构的文件）
+    file(GLOB RESAMPLER_SRC "${PROJECT_SOURCE_DIR}/audio_processing/resample/*.cc")
+    # 排除 NEON 文件（仅 ARM）
+    list(FILTER RESAMPLER_SRC EXCLUDE REGEX ".*_neon\\.cc$")
     target_sources(${LIB_NAME} PRIVATE
         ${RESAMPLER_SRC}
     )
 
     # 设置该库所需的头文件路径
     target_include_directories(${LIB_NAME} PUBLIC
-        "${PROJECT_SOURCE_DIR}/"
-        "${PROJECT_SOURCE_DIR}/rtc_base/"
-        "${PROJECT_SOURCE_DIR}/system_wrappers/include/"
-        "${PROJECT_SOURCE_DIR}/common_audio/resampler/include/"
-        "${CMAKE_PREFIX_PATH}/include/"
+        "${PROJECT_SOURCE_DIR}"
+        "${PROJECT_SOURCE_DIR}/utils/"
+        "${PROJECT_SOURCE_DIR}/audio_processing/resample/"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/"
+        "${PROJECT_SOURCE_DIR}/common/signal_processing/include/"
     )
 
     # --- 2. 定义测试可执行程序 ---

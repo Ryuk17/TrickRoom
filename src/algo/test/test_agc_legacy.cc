@@ -1,6 +1,6 @@
 #include <iostream>
-#include "common_audio/dr_wav.h"
-#include "modules/audio_processing/agc/legacy/gain_control.h"
+#include "utils/dr_wav.h"
+#include "audio_processing/agc_legacy/gain_control.h"
 
 #define FRAME_LEN (160)
 
@@ -8,7 +8,7 @@ using namespace webrtc;
 
 int main(int argc, char **argv) 
 {
-    char wav_file[1024] = "data/voice_engine/audio_short16.wav";
+    char wav_file[1024] = "data/audio_short16.wav";
 
     DrWavReader wav_reader(wav_file);
     std::cout<< "sample_rate: " << wav_reader.sample_rate() << std::endl;
@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     std::cout<< "read samples: " << wav_reader.num_samples() << std::endl;
 
     DrWavWriter wav_writer(
-        "data/voice_engine/audio_short16_agc_legacy_out.wav", 
+        "data/audio_short16_agc_legacy_out.wav", 
         wav_reader.sample_rate(),
         wav_reader.num_channels()    );
 

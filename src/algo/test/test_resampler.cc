@@ -2,12 +2,12 @@
  * @Author: Ryuk
  * @Date: 2026-07-06 22:23:48
  * @LastEditors: Ryuk
- * @LastEditTime: 2026-07-06 22:35:58
+ * @LastEditTime: 2026-08-06 00:01:05
  * @Description: First create
  */
 #include <iostream>
-#include "common_audio/dr_wav.h"
-#include "common_audio/resampler/include/resampler.h"
+#include "utils/dr_wav.h"
+#include "audio_processing/resample/resampler.h"
 
 #define FRAME_LEN (160)
 #define RESAMPLED_FRAME_LEN (FRAME_LEN * 4)
@@ -16,7 +16,7 @@ using namespace webrtc;
 
 int main(int argc, char **argv) 
 {
-    char wav_file[1024] = "data/voice_engine/audio_short16.wav";
+    char wav_file[1024] = "data/audio_short16.wav";
     int dst_sample_rate = 48000;
     DrWavReader wav_reader(wav_file);
     std::cout<< "src sample_rate: " << wav_reader.sample_rate() << std::endl;
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     std::cout<< "dst sample_rate: " << dst_sample_rate << std::endl;
 
     DrWavWriter wav_writer(
-        "data/voice_engine/audio_short16_resample_out.wav", 
+        "data/audio_short16_resample_out.wav", 
         dst_sample_rate,
         wav_reader.num_channels()    );
 
