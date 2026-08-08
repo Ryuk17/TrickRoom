@@ -47,6 +47,13 @@ function(add_vad_test_module)
         "${PROJECT_SOURCE_DIR}/audio_processing/vad/vad_core/vad_sp.c"
     )
 
+    # AudioBuffer + splitting + three band filter bank
+    target_sources(${LIB_NAME} PRIVATE
+        "${PROJECT_SOURCE_DIR}/common/audio_buffer.cc"
+        "${PROJECT_SOURCE_DIR}/common/splitting_filter.cc"
+        "${PROJECT_SOURCE_DIR}/common/three_band_filter_bank.cc"
+    )
+
     # High-level VAD module sources
     file(GLOB VAD_SRC "${PROJECT_SOURCE_DIR}/audio_processing/vad/*.cc")
     target_sources(${LIB_NAME} PRIVATE ${VAD_SRC})
@@ -55,10 +62,16 @@ function(add_vad_test_module)
     file(GLOB ISAC_VAD_SRC "${PROJECT_SOURCE_DIR}/audio_processing/vad/isac/main/source/*.c")
     target_sources(${LIB_NAME} PRIVATE ${ISAC_VAD_SRC})
 
-    # Resampler sources (needed by voice_activity_detector)
+    # Resampler sources (needed by voice_activity_detector + AudioBuffer)
     file(GLOB RESAMPLER_SRC "${PROJECT_SOURCE_DIR}/audio_processing/resample/*.cc")
     list(FILTER RESAMPLER_SRC EXCLUDE REGEX ".*_neon\\.cc$")
     target_sources(${LIB_NAME} PRIVATE ${RESAMPLER_SRC})
+
+    # AVX2+FMA for sinc_resampler_avx2.cc
+    set_source_files_properties(
+        "${PROJECT_SOURCE_DIR}/audio_processing/resample/sinc_resampler_avx2.cc"
+        PROPERTIES COMPILE_FLAGS "-mavx2 -mfma"
+    )
 
     # Include directories
     target_include_directories(${LIB_NAME} PUBLIC

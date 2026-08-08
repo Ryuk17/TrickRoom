@@ -30,6 +30,13 @@ function(add_agc2_test_module)
         "${PROJECT_SOURCE_DIR}/common/signal_processing/splitting_filter.c"
     )
 
+    # AudioBuffer + splitting + three band filter bank
+    target_sources(${LIB_NAME} PRIVATE
+        "${PROJECT_SOURCE_DIR}/common/audio_buffer.cc"
+        "${PROJECT_SOURCE_DIR}/common/splitting_filter.cc"
+        "${PROJECT_SOURCE_DIR}/common/three_band_filter_bank.cc"
+    )
+
     # AGC2 core sources
     file(GLOB AGC2_CORE "${PROJECT_SOURCE_DIR}/audio_processing/agc2/*.cc")
     target_sources(${LIB_NAME} PRIVATE ${AGC2_CORE})

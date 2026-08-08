@@ -5,7 +5,8 @@
 #include <vector>
 
 #include "utils/dr_wav.h"
-#include "utils/audio_util.h"
+#include "utils/stream_config.h"
+#include "common/audio_buffer.h"
 #include "audio_processing/agc2/adaptive_digital_gain_controller.h"
 #include "audio_processing/agc2/speech_level_estimator.h"
 #include "audio_processing/agc2/noise_level_estimator.h"
@@ -34,6 +35,9 @@ int main(int argc, char **argv)
         "data/audio_short16_agc2_out.wav",
         rate, num_channels    );
 
+    StreamConfig stream_config(rate, num_channels);
+    AudioBuffer audio_buffer(rate, num_channels, rate, num_channels, rate, num_channels);
+
     // Setup AGC2 components
     ApmDataDumper apm_data_dumper(0);
 
@@ -57,7 +61,7 @@ int main(int argc, char **argv)
     int frame_size = samples_per_channel * num_channels;
 
     std::vector<int16_t> wav_data(frame_size);
-    std::vector<float> frame_float(frame_size);
+    std::vector<int16_t> out_wav_data(frame_size);
 
     float initial_speech_level = speech_level_estimator.level_dbfs();
     std::cout << "initial speech level dbfs: " << initial_speech_level << std::endl;
@@ -77,22 +81,21 @@ int main(int argc, char **argv)
             read_samples = frame_size;
         }
 
-        int samples_this_frame = read_samples / num_channels;
+        // Copy int16 data into AudioBuffer (int16→float conversion).
+        audio_buffer.CopyFrom(wav_data.data(), stream_config);
 
-        // Convert int16 to FloatS16 scale ([-32768.0, 32768.0]).
-        S16ToFloatS16(wav_data.data(), read_samples, frame_float.data());
-
-        // Create deinterleaved view for the frame.
-        DeinterleavedView<float> view(frame_float.data(), samples_this_frame, num_channels);
+        // Get deinterleaved float view for AGC2 processing.
+        auto view = audio_buffer.view();
 
         // RNN VAD: analyze the original audio to get speech probability.
         float speech_probability = vad.Analyze(view);
 
         // Compute RMS and peak levels in dBFS for SpeechLevelEstimator.
+        const float* ch = audio_buffer.channels_const()[0];
         float sum_sq = 0.0f;
         float peak = 0.0f;
         for (int i = 0; i < read_samples; ++i) {
-            float val = frame_float[i];
+            float val = ch[i];
             sum_sq += val * val;
             peak = std::max(peak, std::abs(val));
         }
@@ -113,17 +116,16 @@ int main(int argc, char **argv)
         info.speech_level_reliable = speech_level_estimator.is_confident();
         info.noise_rms_dbfs = noise_rms_dbfs;
         info.headroom_db = config.headroom_db;
-        // Use a reasonable default limiter envelope level (not critical for basic testing).
         info.limiter_envelope_dbfs = -2.0f;
 
         // Apply adaptive digital gain to the frame.
         gain_controller.Process(info, view);
 
-        // Convert back from FloatS16 to int16.
-        FloatS16ToS16(frame_float.data(), read_samples, wav_data.data());
+        // Copy float data back to int16.
+        audio_buffer.CopyTo(stream_config, out_wav_data.data());
 
         // Write output.
-        wav_writer.WriteSamples(wav_data.data(), read_samples);
+        wav_writer.WriteSamples(out_wav_data.data(), read_samples);
 
         total_samples += read_samples;
         total_frames++;
