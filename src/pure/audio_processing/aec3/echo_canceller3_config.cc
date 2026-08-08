@@ -7,7 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "utils/echo_canceller3_config.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 
 #include <algorithm>
 #include <cmath>

@@ -19,8 +19,7 @@
 #include <vector>
 
 #include "utils/array_view.h"
-#include "utils/echo_canceller3_config.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "audio_processing/aec3/fullband_erle_estimator.h"
 #include "audio_processing/aec3/render_buffer.h"
@@ -34,8 +33,7 @@ namespace webrtc {
 // and another one is done using the aggreation of energy over all the subbands.
 class ErleEstimator {
  public:
-  ErleEstimator(const Environment& env,
-                size_t startup_phase_length_blocks,
+  ErleEstimator(size_t startup_phase_length_blocks,
                 const EchoCanceller3Config& config,
                 size_t num_capture_channels);
   ~ErleEstimator();

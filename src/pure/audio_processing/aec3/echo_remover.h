@@ -15,10 +15,9 @@
 #include <memory>
 #include <optional>
 
-#include "utils/echo_canceller3_config.h"
-#include "utils/echo_control.h"
-#include "utils/neural_residual_echo_estimator.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
+#include "audio_processing/aec3/echo_control.h"
+#include "audio_processing/aec3/neural_residual_echo_estimator.h"
 #include "audio_processing/aec3/block.h"
 #include "audio_processing/aec3/delay_estimate.h"
 #include "audio_processing/aec3/echo_path_variability.h"
@@ -30,7 +29,6 @@ namespace webrtc {
 class EchoRemover {
  public:
   static std::unique_ptr<EchoRemover> Create(
-      const Environment& env,
       const EchoCanceller3Config& config,
       int sample_rate_hz,
       size_t num_render_channels,

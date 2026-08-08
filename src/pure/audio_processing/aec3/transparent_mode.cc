@@ -1,3 +1,4 @@
+#include "utils/environment.h"
 /*
  *  Copyright (c) 2020 The WebRTC project authors. All Rights Reserved.
  *
@@ -13,9 +14,7 @@
 #include <cstddef>
 #include <memory>
 
-#include "utils/echo_canceller3_config.h"
-#include "utils/environment.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "utils/checks.h"
 #include "utils/logging.h"
@@ -234,14 +233,13 @@ class LegacyTransparentModeImpl : public TransparentMode {
 };
 
 std::unique_ptr<TransparentMode> TransparentMode::Create(
-    const Environment& env,
     const EchoCanceller3Config& config) {
   if (config.ep_strength.bounded_erl ||
-      DeactivateTransparentMode(env.field_trials())) {
+      DeactivateTransparentMode(FieldTrialsView())) {
     RTC_LOG(LS_INFO) << "AEC3 Transparent Mode: Disabled";
     return nullptr;
   }
-  if (ActivateTransparentModeHmm(env.field_trials())) {
+  if (ActivateTransparentModeHmm(FieldTrialsView())) {
     RTC_LOG(LS_INFO) << "AEC3 Transparent Mode: HMM";
     return std::make_unique<TransparentModeImpl>();
   }

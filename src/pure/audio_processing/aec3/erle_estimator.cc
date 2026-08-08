@@ -16,8 +16,7 @@
 #include <vector>
 
 #include "utils/array_view.h"
-#include "utils/echo_canceller3_config.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "audio_processing/aec3/render_buffer.h"
 #include "audio_processing/aec3/signal_dependent_erle_estimator.h"
@@ -26,13 +25,13 @@
 
 namespace webrtc {
 
-ErleEstimator::ErleEstimator(const Environment& env,
+ErleEstimator::ErleEstimator(
                              size_t startup_phase_length_blocks,
                              const EchoCanceller3Config& config,
                              size_t num_capture_channels)
     : startup_phase_length_blocks_(startup_phase_length_blocks),
       fullband_erle_estimator_(config.erle, num_capture_channels),
-      subband_erle_estimator_(env, config, num_capture_channels) {
+      subband_erle_estimator_( config, num_capture_channels) {
   if (config.erle.num_sections > 1) {
     signal_dependent_erle_estimator_ =
         std::make_unique<SignalDependentErleEstimator>(config,

@@ -19,11 +19,10 @@
 #include <vector>
 
 #include "utils/array_view.h"
-#include "utils/echo_canceller3_config.h"
-#include "utils/echo_control.h"
-#include "utils/neural_residual_echo_estimator.h"
 #include "utils/environment.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
+#include "audio_processing/aec3/echo_control.h"
+#include "audio_processing/aec3/neural_residual_echo_estimator.h"
 #include "audio_processing/aec3/api_call_jitter_metrics.h"
 #include "audio_processing/aec3/block.h"
 #include "audio_processing/aec3/block_delay_buffer.h"
@@ -93,7 +92,7 @@ class Aec3RenderQueueItemVerifier {
 // AnalyzeRender call which can be called concurrently with the other methods.
 class EchoCanceller3 : public EchoControl {
  public:
-  EchoCanceller3(const Environment& env,
+  EchoCanceller3(
                  const EchoCanceller3Config& config,
                  const std::optional<EchoCanceller3Config>& multichannel_config,
                  NeuralResidualEchoEstimator* neural_residual_echo_estimator,
@@ -181,7 +180,6 @@ class EchoCanceller3 : public EchoControl {
   // Analyzes the full-band domain capture signal to detect signal saturation.
   void AnalyzeCapture(const AudioBuffer& capture);
 
-  const Environment env_;
   RaceChecker capture_race_checker_;
   RaceChecker render_race_checker_;
 

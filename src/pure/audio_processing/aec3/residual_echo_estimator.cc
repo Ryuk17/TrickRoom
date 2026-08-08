@@ -1,3 +1,4 @@
+#include "utils/environment.h"
 /*
  *  Copyright (c) 2017 The WebRTC project authors. All Rights Reserved.
  *
@@ -16,9 +17,7 @@
 #include <vector>
 
 #include "utils/array_view.h"
-#include "utils/echo_canceller3_config.h"
-#include "utils/environment.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "audio_processing/aec3/aec_state.h"
 #include "audio_processing/aec3/render_buffer.h"
@@ -163,7 +162,6 @@ void EchoGeneratingPower(size_t num_render_channels,
 }  // namespace
 
 ResidualEchoEstimator::ResidualEchoEstimator(
-    const Environment& env,
     const EchoCanceller3Config& config,
     size_t num_render_channels,
     NeuralResidualEchoEstimator* neural_residual_echo_estimator)
@@ -172,13 +170,13 @@ ResidualEchoEstimator::ResidualEchoEstimator(
       early_reflections_transparent_mode_gain_(GetTransparentModeGain()),
       late_reflections_transparent_mode_gain_(GetTransparentModeGain()),
       early_reflections_general_gain_(
-          GetEarlyReflectionsDefaultModeGain(env.field_trials(),
+          GetEarlyReflectionsDefaultModeGain(FieldTrialsView(),
                                              config_.ep_strength)),
       late_reflections_general_gain_(
-          GetLateReflectionsDefaultModeGain(env.field_trials(),
+          GetLateReflectionsDefaultModeGain(FieldTrialsView(),
                                             config_.ep_strength)),
       erle_onset_compensation_in_dominant_nearend_(
-          UseErleOnsetCompensationInDominantNearend(env.field_trials(),
+          UseErleOnsetCompensationInDominantNearend(FieldTrialsView(),
                                                     config_.ep_strength)),
       neural_residual_echo_estimator_(neural_residual_echo_estimator) {
   Reset();

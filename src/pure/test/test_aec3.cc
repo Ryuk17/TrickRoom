@@ -3,7 +3,6 @@
 #include <iostream>
 #include "utils/dr_wav.h"
 #include "audio_processing/aec3/echo_canceller3.h"
-#include "utils/environment.h"
 #include "utils/stream_config.h"
 #include "common/audio_buffer.h"
 
@@ -34,7 +33,7 @@ int main(int argc, char **argv)
     auto rate = farend_wav_reader.sample_rate();
     auto num_channels = farend_wav_reader.num_channels();
 
-    EchoCanceller3 aec3(CreateEnvironment(), EchoCanceller3Config(),
+    EchoCanceller3 aec3(EchoCanceller3Config(),
                         /*multichannel_config=*/std::nullopt,
                         /*neural_residual_echo_estimator=*/nullptr,
                         rate, 1, 1);

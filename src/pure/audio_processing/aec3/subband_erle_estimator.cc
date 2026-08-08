@@ -1,3 +1,4 @@
+#include "utils/environment.h"
 /*
  *  Copyright (c) 2018 The WebRTC project authors. All Rights Reserved.
  *
@@ -18,9 +19,7 @@
 #include <vector>
 
 #include "utils/array_view.h"
-#include "utils/echo_canceller3_config.h"
-#include "utils/environment.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "utils/apm_data_dumper.h"
 #include "utils/checks.h"
@@ -49,14 +48,14 @@ bool EnableMinErleDuringOnsets(const FieldTrialsView& field_trials) {
 
 }  // namespace
 
-SubbandErleEstimator::SubbandErleEstimator(const Environment& env,
+SubbandErleEstimator::SubbandErleEstimator(
                                            const EchoCanceller3Config& config,
                                            size_t num_capture_channels)
     : use_onset_detection_(config.erle.onset_detection),
       min_erle_(config.erle.min),
       max_erle_(SetMaxErleBands(config.erle.max_l, config.erle.max_h)),
       use_min_erle_during_onsets_(
-          EnableMinErleDuringOnsets(env.field_trials())),
+          EnableMinErleDuringOnsets(FieldTrialsView())),
       accum_spectra_(num_capture_channels),
       erle_(num_capture_channels),
       erle_onset_compensated_(num_capture_channels),

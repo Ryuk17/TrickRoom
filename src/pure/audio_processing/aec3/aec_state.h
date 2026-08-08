@@ -20,8 +20,7 @@
 #include <vector>
 
 #include "utils/array_view.h"
-#include "utils/echo_canceller3_config.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "audio_processing/aec3/block.h"
 #include "audio_processing/aec3/delay_estimate.h"
@@ -44,8 +43,7 @@ class ApmDataDumper;
 // Handles the state and the conditions for the echo removal functionality.
 class AecState {
  public:
-  AecState(const Environment& env,
-           const EchoCanceller3Config& config,
+  AecState(const EchoCanceller3Config& config,
            size_t num_capture_channels);
   ~AecState();
 

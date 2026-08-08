@@ -1,3 +1,4 @@
+#include "utils/environment.h"
 /*
  *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
@@ -20,10 +21,8 @@
 
 #include "absl/strings/string_view.h"
 #include "utils/array_view.h"
-#include "utils/echo_canceller3_config.h"
-#include "utils/echo_control.h"
-#include "utils/environment.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
+#include "audio_processing/aec3/echo_control.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "audio_processing/aec3/block.h"
 #include "audio_processing/aec3/block_delay_buffer.h"
@@ -745,16 +744,14 @@ void EchoCanceller3::RenderWriter::Insert(const AudioBuffer& input) {
 std::atomic<int> EchoCanceller3::instance_count_(0);
 
 EchoCanceller3::EchoCanceller3(
-    const Environment& env,
     const EchoCanceller3Config& config,
     const std::optional<EchoCanceller3Config>& multichannel_config,
     NeuralResidualEchoEstimator* neural_residual_echo_estimator,
     int sample_rate_hz,
     size_t num_render_channels,
     size_t num_capture_channels)
-    : env_(env),
-      data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
-      config_(AdjustConfig(config, env.field_trials())),
+    : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
+      config_(AdjustConfig(config, FieldTrialsView())),
       sample_rate_hz_(sample_rate_hz),
       num_bands_(NumBandsForRate(sample_rate_hz_)),
       num_render_input_channels_(num_render_channels),
@@ -844,7 +841,7 @@ void EchoCanceller3::Initialize() {
       new FrameBlocker(num_bands_, num_render_channels_to_aec_));
 
   block_processor_ = BlockProcessor::Create(
-      env_, config_selector_.active_config(), sample_rate_hz_,
+      config_selector_.active_config(), sample_rate_hz_,
       num_render_channels_to_aec_, num_capture_channels_,
       neural_residual_echo_estimator_);
 

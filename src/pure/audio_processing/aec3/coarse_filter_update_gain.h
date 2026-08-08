@@ -15,7 +15,7 @@
 
 #include <array>
 
-#include "utils/echo_canceller3_config.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "audio_processing/aec3/fft_data.h"
 #include "audio_processing/aec3/render_signal_analyzer.h"

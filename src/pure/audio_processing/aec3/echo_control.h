@@ -6,8 +6,7 @@
 
 #include <memory>
 
-#include "utils/environment.h"
-#include "utils/neural_residual_echo_estimator.h"
+#include "audio_processing/aec3/neural_residual_echo_estimator.h"
 
 namespace webrtc {
 
@@ -41,18 +40,16 @@ class EchoControlFactory {
   virtual ~EchoControlFactory() = default;
 
   virtual std::unique_ptr<EchoControl> Create(
-      const Environment& env,
       int sample_rate_hz,
       int num_render_channels,
       int num_capture_channels) = 0;
 
   virtual std::unique_ptr<EchoControl> Create(
-      const Environment& env,
       int sample_rate_hz,
       int num_render_channels,
       int num_capture_channels,
       NeuralResidualEchoEstimator* /*neural_residual_echo_estimator*/) {
-    return Create(env, sample_rate_hz, num_render_channels,
+    return Create(sample_rate_hz, num_render_channels,
                   num_capture_channels);
   }
 };

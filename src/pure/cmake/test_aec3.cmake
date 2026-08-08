@@ -6,7 +6,7 @@ function(add_aec3_test_module)
         "${PROJECT_SOURCE_DIR}/utils/dr_wav.cc"
         "${PROJECT_SOURCE_DIR}/utils/audio_util.cc"
         "${PROJECT_SOURCE_DIR}/utils/string_builder.cc"
-        "${PROJECT_SOURCE_DIR}/utils/echo_canceller3_config.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/echo_canceller3_config.cc"
 
         # Ooura FFT (128-point, used by AEC3)
         "${PROJECT_SOURCE_DIR}/audio_processing/aec3/ooura_fft/ooura_fft.cc"

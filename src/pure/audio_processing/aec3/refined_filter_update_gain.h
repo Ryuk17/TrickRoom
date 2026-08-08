@@ -18,7 +18,7 @@
 #include <memory>
 
 #include "utils/array_view.h"
-#include "utils/echo_canceller3_config.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 #include "audio_processing/aec3/aec3_common.h"
 
 namespace webrtc {

@@ -15,9 +15,8 @@
 #include <optional>
 #include <utility>
 
-#include "utils/echo_canceller3_config.h"
-#include "utils/echo_control.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
+#include "audio_processing/aec3/echo_control.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "audio_processing/aec3/block.h"
 #include "audio_processing/aec3/block_processor_metrics.h"
@@ -237,7 +236,6 @@ void BlockProcessorImpl::SetCaptureOutputUsage(bool capture_output_used) {
 }  // namespace
 
 std::unique_ptr<BlockProcessor> BlockProcessor::Create(
-    const Environment& env,
     const EchoCanceller3Config& config,
     int sample_rate_hz,
     size_t num_render_channels,
@@ -251,7 +249,7 @@ std::unique_ptr<BlockProcessor> BlockProcessor::Create(
                                                          num_capture_channels));
   }
   std::unique_ptr<EchoRemover> echo_remover =
-      EchoRemover::Create(env, config, sample_rate_hz, num_render_channels,
+      EchoRemover::Create(config, sample_rate_hz, num_render_channels,
                           num_capture_channels, neural_residual_echo_estimator);
   return Create(config, sample_rate_hz, num_render_channels,
                 num_capture_channels, std::move(render_buffer),
@@ -259,7 +257,6 @@ std::unique_ptr<BlockProcessor> BlockProcessor::Create(
 }
 
 std::unique_ptr<BlockProcessor> BlockProcessor::Create(
-    const Environment& env,
     const EchoCanceller3Config& config,
     int sample_rate_hz,
     size_t num_render_channels,
@@ -272,7 +269,7 @@ std::unique_ptr<BlockProcessor> BlockProcessor::Create(
                                                          num_capture_channels));
   }
   std::unique_ptr<EchoRemover> echo_remover =
-      EchoRemover::Create(env, config, sample_rate_hz, num_render_channels,
+      EchoRemover::Create(config, sample_rate_hz, num_render_channels,
                           num_capture_channels, neural_residual_echo_estimator);
   return Create(config, sample_rate_hz, num_render_channels,
                 num_capture_channels, std::move(render_buffer),

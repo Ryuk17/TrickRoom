@@ -18,8 +18,7 @@
 #include <vector>
 
 #include "utils/array_view.h"
-#include "utils/echo_canceller3_config.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 #include "audio_processing/aec3/adaptive_fir_filter.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "audio_processing/aec3/aec3_fft.h"
@@ -39,8 +38,7 @@ namespace webrtc {
 // Proves linear echo cancellation functionality
 class Subtractor {
  public:
-  Subtractor(const Environment& env,
-             const EchoCanceller3Config& config,
+  Subtractor(const EchoCanceller3Config& config,
              size_t num_render_channels,
              size_t num_capture_channels,
              ApmDataDumper* data_dumper,

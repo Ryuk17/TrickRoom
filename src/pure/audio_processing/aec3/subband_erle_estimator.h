@@ -18,8 +18,7 @@
 #include <vector>
 
 #include "utils/array_view.h"
-#include "utils/echo_canceller3_config.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "utils/apm_data_dumper.h"
 
@@ -28,8 +27,7 @@ namespace webrtc {
 // Estimates the echo return loss enhancement for each frequency subband.
 class SubbandErleEstimator {
  public:
-  SubbandErleEstimator(const Environment& env,
-                       const EchoCanceller3Config& config,
+  SubbandErleEstimator(const EchoCanceller3Config& config,
                        size_t num_capture_channels);
   ~SubbandErleEstimator();
 

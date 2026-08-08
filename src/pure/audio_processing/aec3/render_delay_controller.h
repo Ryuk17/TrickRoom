@@ -14,7 +14,7 @@
 #include <cstddef>
 #include <optional>
 
-#include "utils/echo_canceller3_config.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 #include "audio_processing/aec3/block.h"
 #include "audio_processing/aec3/delay_estimate.h"
 #include "audio_processing/aec3/downsampled_render_buffer.h"

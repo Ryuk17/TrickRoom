@@ -1,3 +1,4 @@
+#include "utils/environment.h"
 /*
  *  Copyright (c) 2017 The WebRTC project authors. All Rights Reserved.
  *
@@ -20,9 +21,7 @@
 #include <vector>
 
 #include "utils/array_view.h"
-#include "utils/echo_canceller3_config.h"
-#include "utils/environment.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "audio_processing/aec3/block.h"
 #include "audio_processing/aec3/delay_estimate.h"
@@ -125,24 +124,23 @@ void AecState::GetResidualEchoScaling(ArrayView<float> residual_scaling) const {
                                           residual_scaling);
 }
 
-AecState::AecState(const Environment& env,
-                   const EchoCanceller3Config& config,
+AecState::AecState(const EchoCanceller3Config& config,
                    size_t num_capture_channels)
     : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       config_(config),
       num_capture_channels_(num_capture_channels),
       deactivate_initial_state_reset_at_echo_path_change_(
-          DeactivateInitialStateResetAtEchoPathChange(env.field_trials())),
+          DeactivateInitialStateResetAtEchoPathChange(FieldTrialsView())),
       full_reset_at_echo_path_change_(
-          FullResetAtEchoPathChange(env.field_trials())),
+          FullResetAtEchoPathChange(FieldTrialsView())),
       subtractor_analyzer_reset_at_echo_path_change_(
-          SubtractorAnalyzerResetAtEchoPathChange(env.field_trials())),
+          SubtractorAnalyzerResetAtEchoPathChange(FieldTrialsView())),
       initial_state_(config_),
       delay_state_(config_, num_capture_channels_),
-      transparent_state_(TransparentMode::Create(env, config_)),
+      transparent_state_(TransparentMode::Create(config_)),
       filter_quality_state_(config_, num_capture_channels_),
       erl_estimator_(2 * kNumBlocksPerSecond),
-      erle_estimator_(env,
+      erle_estimator_(
                       2 * kNumBlocksPerSecond,
                       config_,
                       num_capture_channels_),

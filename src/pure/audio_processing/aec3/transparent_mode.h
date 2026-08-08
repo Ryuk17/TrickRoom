@@ -13,8 +13,7 @@
 
 #include <memory>
 
-#include "utils/echo_canceller3_config.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 
 namespace webrtc {
 
@@ -23,7 +22,6 @@ namespace webrtc {
 class TransparentMode {
  public:
   static std::unique_ptr<TransparentMode> Create(
-      const Environment& env,
       const EchoCanceller3Config& config);
 
   virtual ~TransparentMode() {}

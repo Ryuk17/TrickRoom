@@ -1,3 +1,4 @@
+#include "utils/environment.h"
 /*
  *  Copyright (c) 2017 The WebRTC project authors. All Rights Reserved.
  *
@@ -17,9 +18,7 @@
 #include <vector>
 
 #include "utils/array_view.h"
-#include "utils/echo_canceller3_config.h"
-#include "utils/environment.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
 #include "audio_processing/aec3/adaptive_fir_filter.h"
 #include "audio_processing/aec3/adaptive_fir_filter_erl.h"
 #include "audio_processing/aec3/aec3_common.h"
@@ -78,7 +77,7 @@ void ScaleFilterOutput(ArrayView<const float> y,
 
 }  // namespace
 
-Subtractor::Subtractor(const Environment& env,
+Subtractor::Subtractor(
                        const EchoCanceller3Config& config,
                        size_t num_render_channels,
                        size_t num_capture_channels,
@@ -90,7 +89,7 @@ Subtractor::Subtractor(const Environment& env,
       config_(config),
       num_capture_channels_(num_capture_channels),
       use_coarse_filter_reset_hangover_(
-          UseCoarseFilterResetHangover(env.field_trials())),
+          UseCoarseFilterResetHangover(FieldTrialsView())),
       refined_filters_(num_capture_channels_),
       coarse_filter_(num_capture_channels_),
       refined_gains_(num_capture_channels_),

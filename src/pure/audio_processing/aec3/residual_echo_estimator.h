@@ -15,9 +15,8 @@
 #include <cstddef>
 
 #include "utils/array_view.h"
-#include "utils/echo_canceller3_config.h"
-#include "utils/neural_residual_echo_estimator.h"
-#include "utils/environment.h"
+#include "audio_processing/aec3/echo_canceller3_config.h"
+#include "audio_processing/aec3/neural_residual_echo_estimator.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "audio_processing/aec3/aec_state.h"
 #include "audio_processing/aec3/render_buffer.h"
@@ -28,7 +27,6 @@ namespace webrtc {
 class ResidualEchoEstimator {
  public:
   ResidualEchoEstimator(
-      const Environment& env,
       const EchoCanceller3Config& config,
       size_t num_render_channels,
       NeuralResidualEchoEstimator* neural_residual_echo_estimator);
