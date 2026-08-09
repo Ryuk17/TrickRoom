@@ -1,12 +1,15 @@
-function(add_agc_legacy_test_module)
-    set(LIB_NAME "agc_legacy_test_lib")
+function(add_libAE_Agc_target)
+    set(LIB_NAME "AE_Agc")
 
     add_library(${LIB_NAME} STATIC
+        # Interface
+        "${PROJECT_SOURCE_DIR}/interface/audio_engine_agc.cpp"
+
         # WAV I/O utilities
         "${PROJECT_SOURCE_DIR}/utils/dr_wav.cc"
         "${PROJECT_SOURCE_DIR}/utils/audio_util.cc"
 
-        # Signal processing library
+        # Signal processing library (same set as test_agc.cmake)
         "${PROJECT_SOURCE_DIR}/signal_processing/dot_product_with_scale.cc"
         "${PROJECT_SOURCE_DIR}/signal_processing/copy_set_operations.c"
         "${PROJECT_SOURCE_DIR}/signal_processing/division_operations.c"
@@ -33,6 +36,7 @@ function(add_agc_legacy_test_module)
     # Include directories
     target_include_directories(${LIB_NAME} PUBLIC
         "${PROJECT_SOURCE_DIR}"
+        "${PROJECT_SOURCE_DIR}/interface/"
         "${PROJECT_SOURCE_DIR}/utils/"
         "${PROJECT_SOURCE_DIR}/signal_processing/"
         "${PROJECT_SOURCE_DIR}/signal_processing/include/"
@@ -42,25 +46,11 @@ function(add_agc_legacy_test_module)
     # Link abseil for header access
     target_link_libraries(${LIB_NAME} PUBLIC absl::strings)
 
-    # --- Test executable ---
-    set(TEST_NAME "test_agc")
+    # Export symbols when building the library itself
+    target_compile_definitions(${LIB_NAME} PRIVATE AUDIO_ENGINE_EXPORTS)
 
-    add_executable(${TEST_NAME} "${PROJECT_SOURCE_DIR}/unitest/internal/test_agc.cc")
-
-    if(WIN32)
-        if(MINGW)
-            target_link_libraries(${TEST_NAME} PRIVATE
-                ${LIB_NAME}
-                absl::strings
-                winmm
-            )
-        endif()
-    else()
-        target_link_libraries(${TEST_NAME} PRIVATE
-            ${LIB_NAME}
-            absl::strings
-        )
-    endif()
-
-    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+    # Output libAE_Agc.a to lib/
+    set_target_properties(${LIB_NAME} PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib"
+    )
 endfunction()

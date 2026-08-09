@@ -1,3 +1,10 @@
+/*
+ * @Author: Ryuk
+ * @Date: 2026-08-09 15:23:41
+ * @LastEditors: Ryuk
+ * @LastEditTime: 2026-08-09 22:49:14
+ * @Description: First create
+ */
 #include <iostream>
 #include "utils/dr_wav.h"
 #include "audio_processing/agc/gain_control.h"
@@ -16,7 +23,7 @@ int main(int argc, char **argv)
     std::cout<< "read samples: " << wav_reader.num_samples() << std::endl;
 
     DrWavWriter wav_writer(
-        "data/audio_short16_agc_legacy_out.wav", 
+        "data/audio_short16_agc_out.wav", 
         wav_reader.sample_rate(),
         wav_reader.num_channels()    );
 
