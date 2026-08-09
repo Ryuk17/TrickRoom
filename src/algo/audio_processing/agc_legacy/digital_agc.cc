@@ -13,8 +13,8 @@
 #include <cstdint>
 #include <cstring>
 
-#include "common/signal_processing/include/signal_processing_library.h"
-#include "common/signal_processing/include/spl_inl.h"
+#include "signal_processing/signal_processing_library.h"
+#include "signal_processing/spl_inl.h"
 #include "audio_processing/agc_legacy/gain_control.h"
 #include "utils/checks.h"
 

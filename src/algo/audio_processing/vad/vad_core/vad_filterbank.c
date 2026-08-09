@@ -10,7 +10,7 @@
 
 #include "audio_processing/vad/vad_core/vad_filterbank.h"
 
-#include "common/signal_processing/include/signal_processing_library.h"
+#include "signal_processing/signal_processing_library.h"
 #include "utils/checks.h"
 
 // Constants used in LogOfEnergy().

@@ -15,16 +15,16 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "common/signal_processing/include/signal_processing_library.h"
-#include "common/signal_processing/include/spl_inl.h"
+#include "signal_processing/signal_processing_library.h"
+#include "signal_processing/spl_inl.h"
 #include "audio_processing/aecm/aecm_defines.h"
 #include "audio_processing/aecm/echo_control_mobile.h"
-#include "audio_processing/utility/delay_estimator_wrapper.h"
+#include "signal_processing/delay_estimator_wrapper.h"
 #include "utils/checks.h"
 #include "utils/safe_conversions.h"
 
 extern "C" {
-#include "common/ring_buffer.h"
+#include "utils/ring_buffer.h"
 }
 
 #include "NE10_types.h"

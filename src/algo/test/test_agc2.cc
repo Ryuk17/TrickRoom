@@ -6,7 +6,7 @@
 
 #include "utils/dr_wav.h"
 #include "utils/stream_config.h"
-#include "common/audio_buffer.h"
+#include "utils/audio_buffer.h"
 #include "audio_processing/agc2/adaptive_digital_gain_controller.h"
 #include "audio_processing/agc2/speech_level_estimator.h"
 #include "audio_processing/agc2/noise_level_estimator.h"

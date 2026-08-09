@@ -13,12 +13,11 @@
 
 #include <arm_neon.h>
 
-#include "common/signal_processing/include/real_fft.h"
 #include "audio_processing/aecm/aecm_core.h"
 #include "utils/checks.h"
 
 extern "C" {
-#include "common/signal_processing/include/signal_processing_library.h"
+#include "signal_processing/signal_processing_library.h"
 }
 
 namespace webrtc {

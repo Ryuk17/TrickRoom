@@ -15,7 +15,7 @@
 
 #include <vector>
 
-#include "common/audio_buffer.h"
+#include "utils/audio_buffer.h"
 
 namespace webrtc {
 

@@ -18,7 +18,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "common/signal_processing/include/signal_processing_library.h"
+#include "signal_processing/signal_processing_library.h"
 
 // TODO(https://bugs.webrtc.org/14476): When converted to C++, remove the macro.
 #if defined(__cplusplus)

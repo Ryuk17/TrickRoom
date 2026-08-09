@@ -29,7 +29,7 @@
 #include "audio_processing/aec3/block_framer.h"
 #include "audio_processing/aec3/block_processor.h"
 #include "audio_processing/aec3/frame_blocker.h"
-#include "audio_processing/high_pass_filter.h"
+#include "signal_processing/high_pass_filter.h"
 #include "utils/apm_data_dumper.h"
 #include "utils/checks.h"
 #include "utils/field_trial_parser.h"

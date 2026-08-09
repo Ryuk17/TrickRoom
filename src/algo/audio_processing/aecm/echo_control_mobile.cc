@@ -20,8 +20,8 @@
 #include "audio_processing/aecm/aecm_core.h"
 
 extern "C" {
-#include "common/ring_buffer.h"
-#include "common/signal_processing/include/signal_processing_library.h"
+#include "utils/ring_buffer.h"
+#include "signal_processing/signal_processing_library.h"
 #include "audio_processing/aecm/aecm_defines.h"
 }
 

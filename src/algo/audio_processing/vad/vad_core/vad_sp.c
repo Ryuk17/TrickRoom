@@ -10,7 +10,7 @@
 
 #include "audio_processing/vad/vad_core/vad_sp.h"
 
-#include "common/signal_processing/include/signal_processing_library.h"
+#include "signal_processing/signal_processing_library.h"
 #include "audio_processing/vad/vad_core/vad_core.h"
 #include "utils/checks.h"
 

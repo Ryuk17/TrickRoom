@@ -31,7 +31,7 @@
 #include "audio_processing/aec3/config_selector.h"
 #include "audio_processing/aec3/frame_blocker.h"
 #include "audio_processing/aec3/multi_channel_content_detector.h"
-#include "common/audio_buffer.h"
+#include "utils/audio_buffer.h"
 #include "utils/apm_data_dumper.h"
 #include "utils/gtest_prod_util.h"
 #include "utils/race_checker.h"

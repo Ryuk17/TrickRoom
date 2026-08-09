@@ -18,7 +18,7 @@
 #include <vector>
 
 #include "utils/array_view.h"
-#include "common/audio_buffer.h"
+#include "utils/audio_buffer.h"
 #include "audio_processing/ns/noise_estimator.h"
 #include "audio_processing/ns/ns_common.h"
 #include "audio_processing/ns/ns_config.h"

@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "utils/array_view.h"
-#include "common/audio_buffer.h"
+#include "utils/audio_buffer.h"
 #include "utils/checks.h"
 
 namespace webrtc {

@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "common/signal_processing/include/signal_processing_library.h"
+#include "signal_processing/signal_processing_library.h"
 #include "audio_processing/vad/vad_core/vad_core.h"
 
 static const int kInitCheck = 42;

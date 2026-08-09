@@ -14,7 +14,7 @@
 #include <cstddef>
 
 #include "utils/array_view.h"
-#include "audio_processing/utility/cascaded_biquad_filter.h"
+#include "signal_processing/cascaded_biquad_filter.h"
 
 namespace webrtc {
 

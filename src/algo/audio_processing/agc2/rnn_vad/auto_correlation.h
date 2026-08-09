@@ -15,7 +15,7 @@
 
 #include "utils/array_view.h"
 #include "audio_processing/agc2/rnn_vad/common.h"
-#include "audio_processing/utility/pffft_wrapper.h"
+#include "signal_processing/pffft_wrapper.h"
 
 namespace webrtc {
 namespace rnn_vad {

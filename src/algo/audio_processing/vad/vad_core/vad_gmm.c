@@ -10,7 +10,7 @@
 
 #include "audio_processing/vad/vad_core/vad_gmm.h"
 
-#include "common/signal_processing/include/signal_processing_library.h"
+#include "signal_processing/signal_processing_library.h"
 
 static const int32_t kCompVar = 22005;
 static const int16_t kLog2Exp = 5909;  // log2(exp(1)) in Q12.

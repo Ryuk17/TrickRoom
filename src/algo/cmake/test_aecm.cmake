@@ -7,32 +7,32 @@ function(add_aecm_test_module)
         "${PROJECT_SOURCE_DIR}/utils/audio_util.cc"
 
         # NE10 FFT (generic C implementation, 128-point)
-        "${PROJECT_SOURCE_DIR}/common/neon_fft/src/NE10_fft.c"
-        "${PROJECT_SOURCE_DIR}/common/neon_fft/src/NE10_fft_float32.c"
-        "${PROJECT_SOURCE_DIR}/common/neon_fft/src/NE10_fft_generic_float32.c"
-        "${PROJECT_SOURCE_DIR}/common/neon_fft/src/NE10_rfft_float32.c"
+        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/src/NE10_fft.c"
+        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/src/NE10_fft_float32.c"
+        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/src/NE10_fft_generic_float32.c"
+        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/src/NE10_rfft_float32.c"
 
         # Signal processing library
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_init.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_inl.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_sqrt.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_sqrt_floor.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/copy_set_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/dot_product_with_scale.cc"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/division_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/min_max_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/vector_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/vector_scaling_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/randomization_functions.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/cross_correlation.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/downsample_fast.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/spl_init.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/spl_inl.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/spl_sqrt.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/spl_sqrt_floor.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/copy_set_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/dot_product_with_scale.cc"
+        "${PROJECT_SOURCE_DIR}/signal_processing/division_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/min_max_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/vector_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/vector_scaling_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/randomization_functions.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/cross_correlation.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/downsample_fast.c"
 
         # Ring buffer
-        "${PROJECT_SOURCE_DIR}/common/ring_buffer.c"
+        "${PROJECT_SOURCE_DIR}/utils/ring_buffer.c"
 
         # Delay estimator
-        "${PROJECT_SOURCE_DIR}/audio_processing/utility/delay_estimator.cc"
-        "${PROJECT_SOURCE_DIR}/audio_processing/utility/delay_estimator_wrapper.cc"
+        "${PROJECT_SOURCE_DIR}/signal_processing/delay_estimator.cc"
+        "${PROJECT_SOURCE_DIR}/signal_processing/delay_estimator_wrapper.cc"
     )
 
     # AECM sources (exclude MIPS/NEON platform-specific files on x86)
@@ -45,9 +45,9 @@ function(add_aecm_test_module)
     target_include_directories(${LIB_NAME} PUBLIC
         "${PROJECT_SOURCE_DIR}"
         "${PROJECT_SOURCE_DIR}/utils/"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/include/"
-        "${PROJECT_SOURCE_DIR}/common/neon_fft/include/"
+        "${PROJECT_SOURCE_DIR}/signal_processing/"
+        "${PROJECT_SOURCE_DIR}/signal_processing/include/"
+        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/include/"
         "${CMAKE_PREFIX_PATH}/include/"
     )
 

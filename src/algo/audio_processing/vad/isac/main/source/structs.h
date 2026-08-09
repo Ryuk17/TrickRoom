@@ -22,7 +22,7 @@
 
 #include "audio_processing/vad/isac/bandwidth_info.h"
 #include "audio_processing/vad/isac/main/source/settings.h"
-#include "common/neon_fft/fft_types.h"
+#include "third_party/neon_fft/fft_types.h"
 
 typedef struct Bitstreamstruct {
   uint8_t stream[STREAM_SIZE_MAX];

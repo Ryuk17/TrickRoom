@@ -18,7 +18,7 @@
 #include <memory>
 
 #include "utils/array_view.h"
-#include "common/audio_buffer.h"
+#include "utils/audio_buffer.h"
 #include "audio_processing/ns/fast_math.h"
 #include "audio_processing/ns/ns_common.h"
 #include "audio_processing/ns/ns_config.h"

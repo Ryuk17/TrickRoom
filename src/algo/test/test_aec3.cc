@@ -4,7 +4,7 @@
 #include "utils/dr_wav.h"
 #include "audio_processing/aec3/echo_canceller3.h"
 #include "utils/stream_config.h"
-#include "common/audio_buffer.h"
+#include "utils/audio_buffer.h"
 
 #define FRAME_LEN (160)
 

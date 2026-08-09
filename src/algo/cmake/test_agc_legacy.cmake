@@ -7,23 +7,23 @@ function(add_agc_legacy_test_module)
         "${PROJECT_SOURCE_DIR}/utils/audio_util.cc"
 
         # Signal processing library
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/dot_product_with_scale.cc"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/copy_set_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/division_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/energy.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/get_scaling_square.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/min_max_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_48khz.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_by_2.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_by_2_internal.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_fractional.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_init.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_inl.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_sqrt.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_sqrt_floor.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/vector_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/vector_scaling_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/dot_product_with_scale.cc"
+        "${PROJECT_SOURCE_DIR}/signal_processing/copy_set_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/division_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/energy.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/get_scaling_square.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/min_max_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/resample.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/resample_48khz.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/resample_by_2.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/resample_by_2_internal.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/resample_fractional.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/spl_init.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/spl_inl.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/spl_sqrt.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/spl_sqrt_floor.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/vector_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/vector_scaling_operations.c"
     )
 
     # AGC legacy sources
@@ -34,8 +34,8 @@ function(add_agc_legacy_test_module)
     target_include_directories(${LIB_NAME} PUBLIC
         "${PROJECT_SOURCE_DIR}"
         "${PROJECT_SOURCE_DIR}/utils/"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/include/"
+        "${PROJECT_SOURCE_DIR}/signal_processing/"
+        "${PROJECT_SOURCE_DIR}/signal_processing/include/"
         "${CMAKE_PREFIX_PATH}/include/"
     )
 

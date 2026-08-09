@@ -8,33 +8,33 @@ function(add_agc2_test_module)
         "${PROJECT_SOURCE_DIR}/utils/string_builder.cc"
 
         # Signal processing library (needed by resampler)
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_sqrt.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_sqrt_floor.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_init.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_inl.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/copy_set_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/dot_product_with_scale.cc"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/energy.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_fractional.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_48khz.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_by_2.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/resample_by_2_internal.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/division_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/get_scaling_square.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/min_max_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/vector_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/vector_scaling_operations.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/downsample_fast.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/filter_ar.c"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/splitting_filter.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/spl_sqrt.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/spl_sqrt_floor.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/spl_init.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/spl_inl.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/copy_set_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/dot_product_with_scale.cc"
+        "${PROJECT_SOURCE_DIR}/signal_processing/energy.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/resample.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/resample_fractional.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/resample_48khz.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/resample_by_2.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/resample_by_2_internal.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/division_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/get_scaling_square.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/min_max_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/vector_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/vector_scaling_operations.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/downsample_fast.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/filter_ar.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/splitting_filter.c"
     )
 
     # AudioBuffer + splitting + three band filter bank
     target_sources(${LIB_NAME} PRIVATE
-        "${PROJECT_SOURCE_DIR}/common/audio_buffer.cc"
-        "${PROJECT_SOURCE_DIR}/common/splitting_filter.cc"
-        "${PROJECT_SOURCE_DIR}/common/three_band_filter_bank.cc"
+        "${PROJECT_SOURCE_DIR}/utils/audio_buffer.cc"
+        "${PROJECT_SOURCE_DIR}/signal_processing/splitting_filter.cc"
+        "${PROJECT_SOURCE_DIR}/signal_processing/three_band_filter_bank.cc"
     )
 
     # AGC2 core sources
@@ -52,7 +52,7 @@ function(add_agc2_test_module)
 
     # PFFFT (non-power-of-2 FFT support for RNN VAD spectral features)
     target_sources(${LIB_NAME} PRIVATE
-        "${PROJECT_SOURCE_DIR}/audio_processing/utility/pffft_wrapper.cc"
+        "${PROJECT_SOURCE_DIR}/signal_processing/pffft_wrapper.cc"
         "${PROJECT_SOURCE_DIR}/third_party/pffft/pffft.c"
         "${PROJECT_SOURCE_DIR}/third_party/pffft/fftpack.c"
     )
@@ -74,8 +74,8 @@ function(add_agc2_test_module)
         "${PROJECT_SOURCE_DIR}"
         "${PROJECT_SOURCE_DIR}/utils/"
         "${PROJECT_SOURCE_DIR}/audio_processing/resample/"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/"
-        "${PROJECT_SOURCE_DIR}/common/signal_processing/include/"
+        "${PROJECT_SOURCE_DIR}/signal_processing/"
+        "${PROJECT_SOURCE_DIR}/signal_processing/include/"
         "${PROJECT_SOURCE_DIR}/third_party/pffft/"
         "${CMAKE_PREFIX_PATH}/include/"
     )

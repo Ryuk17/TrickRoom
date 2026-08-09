@@ -13,7 +13,7 @@
 
 #include "audio_processing/aecm/aecm_core.h"
 #include "audio_processing/aecm/echo_control_mobile.h"
-#include "audio_processing/utility/delay_estimator_wrapper.h"
+#include "signal_processing/delay_estimator_wrapper.h"
 #include "utils/checks.h"
 #include "utils/safe_conversions.h"
 

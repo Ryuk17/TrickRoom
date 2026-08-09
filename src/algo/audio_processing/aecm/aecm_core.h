@@ -18,7 +18,7 @@
 #include "audio_processing/aecm/aecm_defines.h"
 
 extern "C" {
-#include "common/ring_buffer.h"
+#include "utils/ring_buffer.h"
 }
 namespace webrtc {
 
