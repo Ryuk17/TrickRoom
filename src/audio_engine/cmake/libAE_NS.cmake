@@ -1,12 +1,15 @@
-function(add_anr_test_module)
-    set(LIB_NAME "anr_test_lib")
+function(add_libAE_NS_target)
+    set(LIB_NAME "AE_NS")
 
     add_library(${LIB_NAME} STATIC
+        # Interface
+        "${PROJECT_SOURCE_DIR}/interface/audio_engine_ns.cpp"
+
         # WAV I/O utilities
         "${PROJECT_SOURCE_DIR}/utils/dr_wav.cc"
         "${PROJECT_SOURCE_DIR}/utils/audio_util.cc"
 
-        # NE10 FFT (generic C implementation)
+        # NE10 FFT (generic C implementation, used by NrFft)
         "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_fft.c"
         "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_fft_float32.c"
         "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_fft_generic_float32.c"
@@ -33,8 +36,10 @@ function(add_anr_test_module)
         "${PROJECT_SOURCE_DIR}/signal_processing/dot_product_with_scale.cc"
         "${PROJECT_SOURCE_DIR}/signal_processing/spl_sqrt.c"
         "${PROJECT_SOURCE_DIR}/signal_processing/spl_sqrt_floor.c"
+    )
 
-        # AudioBuffer + splitting + three band filter bank
+    # AudioBuffer + splitting + three band filter bank
+    target_sources(${LIB_NAME} PRIVATE
         "${PROJECT_SOURCE_DIR}/utils/audio_buffer.cc"
         "${PROJECT_SOURCE_DIR}/signal_processing/splitting_filter.cc"
         "${PROJECT_SOURCE_DIR}/signal_processing/three_band_filter_bank.cc"
@@ -52,6 +57,7 @@ function(add_anr_test_module)
     # Include directories
     target_include_directories(${LIB_NAME} PUBLIC
         "${PROJECT_SOURCE_DIR}"
+        "${PROJECT_SOURCE_DIR}/interface/"
         "${PROJECT_SOURCE_DIR}/utils/"
         "${PROJECT_SOURCE_DIR}/audio_processing/resample/"
         "${PROJECT_SOURCE_DIR}/signal_processing/"
@@ -63,25 +69,11 @@ function(add_anr_test_module)
     # Link abseil for header access
     target_link_libraries(${LIB_NAME} PUBLIC absl::strings)
 
-    # --- Test executable ---
-    set(TEST_NAME "test_anr")
+    # Export symbols when building the library itself
+    target_compile_definitions(${LIB_NAME} PRIVATE AUDIO_ENGINE_EXPORTS)
 
-    add_executable(${TEST_NAME} "${PROJECT_SOURCE_DIR}/test/test_anr.cc")
-
-    if(WIN32)
-        if(MINGW)
-            target_link_libraries(${TEST_NAME} PRIVATE
-                ${LIB_NAME}
-                absl::strings
-                winmm
-            )
-        endif()
-    else()
-        target_link_libraries(${TEST_NAME} PRIVATE
-            ${LIB_NAME}
-            absl::strings
-        )
-    endif()
-
-    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+    # Output libAE_NS.a to lib/
+    set_target_properties(${LIB_NAME} PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib"
+    )
 endfunction()
