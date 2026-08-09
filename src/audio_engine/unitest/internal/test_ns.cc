@@ -2,7 +2,7 @@
  * @Author: Ryuk
  * @Date: 2026-07-27 22:42:40
  * @LastEditors: Ryuk
- * @LastEditTime: 2026-08-01 12:08:23
+ * @LastEditTime: 2026-08-09 22:47:40
  * @Description: First create
  */
 #include <iostream>
@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     std::cout<< "read samples: " << wav_reader.num_samples() << std::endl;
 
     DrWavWriter wav_writer(
-        "data/audio_long16noise_anr_out.wav", 
+        "data/audio_long16noise_ns_out.wav", 
         wav_reader.sample_rate(),
         wav_reader.num_channels()    );
 
