@@ -9,10 +9,10 @@ function(add_aec3_test_module)
         "${PROJECT_SOURCE_DIR}/audio_processing/aec3/echo_canceller3_config.cc"
 
         # NE10 FFT (generic C implementation)
-        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/src/NE10_fft.c"
-        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/src/NE10_fft_float32.c"
-        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/src/NE10_fft_generic_float32.c"
-        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/src/NE10_rfft_float32.c"
+        "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_fft.c"
+        "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_fft_float32.c"
+        "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_fft_generic_float32.c"
+        "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_rfft_float32.c"
 
         # Signal processing library
         "${PROJECT_SOURCE_DIR}/signal_processing/spl_sqrt.c"
@@ -79,7 +79,7 @@ function(add_aec3_test_module)
         "${PROJECT_SOURCE_DIR}/audio_processing/resample/"
         "${PROJECT_SOURCE_DIR}/signal_processing/"
         "${PROJECT_SOURCE_DIR}/signal_processing/include/"
-        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/include/"
+        "${PROJECT_SOURCE_DIR}/third_party/neon-fft/include/"
         "${CMAKE_PREFIX_PATH}/include/"
     )
 

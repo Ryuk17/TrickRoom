@@ -7,10 +7,10 @@ function(add_aecm_test_module)
         "${PROJECT_SOURCE_DIR}/utils/audio_util.cc"
 
         # NE10 FFT (generic C implementation, 128-point)
-        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/src/NE10_fft.c"
-        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/src/NE10_fft_float32.c"
-        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/src/NE10_fft_generic_float32.c"
-        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/src/NE10_rfft_float32.c"
+        "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_fft.c"
+        "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_fft_float32.c"
+        "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_fft_generic_float32.c"
+        "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_rfft_float32.c"
 
         # Signal processing library
         "${PROJECT_SOURCE_DIR}/signal_processing/spl_init.c"
@@ -47,7 +47,7 @@ function(add_aecm_test_module)
         "${PROJECT_SOURCE_DIR}/utils/"
         "${PROJECT_SOURCE_DIR}/signal_processing/"
         "${PROJECT_SOURCE_DIR}/signal_processing/include/"
-        "${PROJECT_SOURCE_DIR}/third_party/neon_fft/include/"
+        "${PROJECT_SOURCE_DIR}/third_party/neon-fft/include/"
         "${CMAKE_PREFIX_PATH}/include/"
     )
 
