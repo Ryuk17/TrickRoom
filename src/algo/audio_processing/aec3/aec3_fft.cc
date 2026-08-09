@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstring>
 #include <functional>
 #include <iterator>
 
@@ -19,12 +20,30 @@
 #include "audio_processing/aec3/aec3_common.h"
 #include "audio_processing/aec3/fft_data.h"
 #include "utils/checks.h"
-#include "utils/cpu_info.h"
+
+// NE10 FFT library headers
+#include "NE10_types.h"
+#include "NE10_macros.h"
+#include "NE10_fft.h"
+
+// Forward-declare NE10 real FFT functions (call the generic C versions directly,
+// bypassing ne10_init() function-pointer dispatch).
+extern "C" {
+ne10_fft_r2c_cfg_float32_t ne10_fft_alloc_r2c_float32(ne10_int32_t nfft);
+void ne10_fft_r2c_1d_float32_c(ne10_fft_cpx_float32_t* fout,
+                                ne10_float32_t* fin,
+                                ne10_fft_r2c_cfg_float32_t cfg);
+void ne10_fft_c2r_1d_float32_c(ne10_float32_t* fout,
+                                ne10_fft_cpx_float32_t* fin,
+                                ne10_fft_r2c_cfg_float32_t cfg);
+void ne10_fft_destroy_r2c_float32(ne10_fft_r2c_cfg_float32_t cfg);
+}
 
 namespace webrtc {
 
 namespace {
 
+// Hanning window (64-point) for ZeroPaddedFft.
 const float kHanning64[kFftLengthBy2] = {
     0.f,         0.00248461f, 0.00991376f, 0.0222136f,  0.03926189f,
     0.06088921f, 0.08688061f, 0.11697778f, 0.15088159f, 0.1882551f,
@@ -40,7 +59,7 @@ const float kHanning64[kFftLengthBy2] = {
     0.15088159f, 0.11697778f, 0.08688061f, 0.06088921f, 0.03926189f,
     0.0222136f,  0.00991376f, 0.00248461f, 0.f};
 
-// Hanning window from Matlab command win = sqrt(hanning(128)).
+// Sqrt(Hanning) window (128-point) from Matlab: win = sqrt(hanning(128)).
 const float kSqrtHanning128[kFftLength] = {
     0.00000000000000f, 0.02454122852291f, 0.04906767432742f, 0.07356456359967f,
     0.09801714032956f, 0.12241067519922f, 0.14673047445536f, 0.17096188876030f,
@@ -75,19 +94,71 @@ const float kSqrtHanning128[kFftLength] = {
     0.19509032201613f, 0.17096188876030f, 0.14673047445536f, 0.12241067519922f,
     0.09801714032956f, 0.07356456359967f, 0.04906767432742f, 0.02454122852291f};
 
-bool IsSse2Available() {
-#if defined(WEBRTC_ARCH_X86_FAMILY)
-  return cpu_info::Supports(cpu_info::ISA::kSSE2);
-#else
-  return false;
-#endif
-}
+// NE10 c2r output must be scaled by kFftLengthBy2 (= 64) to match the Ooura
+// InverseFft convention.  (Calibrated via fft_calibrate.cc: Ooura round-trip
+// multiplies the input by 64, NE10 round-trip is identity, so NE10 c2r × 64
+// equals Ooura InverseFft.)
+constexpr float kIfftScale = static_cast<float>(kFftLengthBy2);
 
 }  // namespace
 
-Aec3Fft::Aec3Fft() : ooura_fft_(IsSse2Available()) {}
+Aec3Fft::Aec3Fft()
+    : ne10_fft_cfg_(ne10_fft_alloc_r2c_float32(kFftLength)) {
+  // Warm-up: run a zero-input FFT to initialise twiddle tables inside NE10.
+  std::array<float, kFftLength> zeros{};
+  ne10_fft_cpx_float32_t tmp[kFftLengthBy2Plus1];
+  ne10_fft_r2c_1d_float32_c(tmp, zeros.data(),
+      static_cast<ne10_fft_r2c_cfg_float32_t>(ne10_fft_cfg_));
+}
 
-// TODO(peah): Change x to be std::array once the rest of the code allows this.
+Aec3Fft::~Aec3Fft() {
+  if (ne10_fft_cfg_) {
+    ne10_fft_destroy_r2c_float32(
+        static_cast<ne10_fft_r2c_cfg_float32_t>(ne10_fft_cfg_));
+  }
+}
+
+void Aec3Fft::Fft(std::array<float, kFftLength>* x, FftData* X) const {
+  RTC_DCHECK(x);
+  RTC_DCHECK(X);
+  ne10_fft_cpx_float32_t fout[kFftLengthBy2Plus1];
+  ne10_fft_r2c_1d_float32_c(fout, x->data(),
+      static_cast<ne10_fft_r2c_cfg_float32_t>(ne10_fft_cfg_));
+  // NE10 r2c output layout: fout[0]={DC_re, 0}, fout[1..63]={re, im},
+  // fout[64]={Nyquist_re, 0}.
+  // NE10 uses the standard e^(-j) DFT convention, whereas Ooura uses e^(+j).
+  // To match Ooura's convention (which the rest of AEC3 expects), conjugate
+  // (negate the imaginary part).
+  X->re[0] = fout[0].r;
+  X->im[0] = 0;
+  X->re[kFftLengthBy2] = fout[kFftLengthBy2].r;
+  X->im[kFftLengthBy2] = 0;
+  for (size_t k = 1; k < kFftLengthBy2; ++k) {
+    X->re[k] = fout[k].r;
+    X->im[k] = -fout[k].i;
+  }
+}
+
+void Aec3Fft::Ifft(const FftData& X, std::array<float, kFftLength>* x) const {
+  RTC_DCHECK(x);
+  ne10_fft_cpx_float32_t fin[kFftLengthBy2Plus1];
+  fin[0].r = X.re[0];
+  fin[0].i = 0;
+  fin[kFftLengthBy2].r = X.re[kFftLengthBy2];
+  fin[kFftLengthBy2].i = 0;
+  // NE10 uses e^(-j) convention; FftData stores Ooura e^(+j) convention.
+  // Conjugate (negate imag) to convert.
+  for (size_t k = 1; k < kFftLengthBy2; ++k) {
+    fin[k].r = X.re[k];
+    fin[k].i = -X.im[k];
+  }
+  ne10_fft_c2r_1d_float32_c(x->data(), fin,
+      static_cast<ne10_fft_r2c_cfg_float32_t>(ne10_fft_cfg_));
+  // Scale NE10 c2r output to match Ooura InverseFft convention.
+  for (auto& v : *x)
+    v *= kIfftScale;
+}
+
 void Aec3Fft::ZeroPaddedFft(ArrayView<const float> x,
                             Window window,
                             FftData* X) const {

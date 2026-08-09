@@ -14,7 +14,6 @@
 #include <array>
 
 #include "utils/array_view.h"
-#include "audio_processing/aec3/ooura_fft/ooura_fft.h"
 #include "audio_processing/aec3/aec3_common.h"
 #include "audio_processing/aec3/fft_data.h"
 #include "utils/checks.h"
@@ -28,23 +27,15 @@ class Aec3Fft {
   enum class Window { kRectangular, kHanning, kSqrtHanning };
 
   Aec3Fft();
+  ~Aec3Fft();
 
   Aec3Fft(const Aec3Fft&) = delete;
   Aec3Fft& operator=(const Aec3Fft&) = delete;
 
   // Computes the FFT. Note that both the input and output are modified.
-  void Fft(std::array<float, kFftLength>* x, FftData* X) const {
-    RTC_DCHECK(x);
-    RTC_DCHECK(X);
-    ooura_fft_.Fft(x->data());
-    X->CopyFromPackedArray(*x);
-  }
+  void Fft(std::array<float, kFftLength>* x, FftData* X) const;
   // Computes the inverse Fft.
-  void Ifft(const FftData& X, std::array<float, kFftLength>* x) const {
-    RTC_DCHECK(x);
-    X.CopyToPackedArray(x);
-    ooura_fft_.InverseFft(x->data());
-  }
+  void Ifft(const FftData& X, std::array<float, kFftLength>* x) const;
 
   // Windows the input using a Hanning window, and then adds padding of
   // kFftLengthBy2 initial zeros before computing the Fft.
@@ -65,7 +56,9 @@ class Aec3Fft {
                  FftData* X) const;
 
  private:
-  const OouraFft ooura_fft_;
+  // NE10 FFT configuration (ne10_fft_r2c_cfg_float32_t, opaque pointer to
+  // avoid pulling NE10 headers into AEC3 public headers).
+  void* ne10_fft_cfg_;
 };
 
 }  // namespace webrtc

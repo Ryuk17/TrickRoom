@@ -8,9 +8,11 @@ function(add_aec3_test_module)
         "${PROJECT_SOURCE_DIR}/utils/string_builder.cc"
         "${PROJECT_SOURCE_DIR}/audio_processing/aec3/echo_canceller3_config.cc"
 
-        # Ooura FFT (128-point, used by AEC3)
-        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/ooura_fft/ooura_fft.cc"
-        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/ooura_fft/ooura_fft_sse2.cc"
+        # NE10 FFT (generic C implementation)
+        "${PROJECT_SOURCE_DIR}/common/neon_fft/src/NE10_fft.c"
+        "${PROJECT_SOURCE_DIR}/common/neon_fft/src/NE10_fft_float32.c"
+        "${PROJECT_SOURCE_DIR}/common/neon_fft/src/NE10_fft_generic_float32.c"
+        "${PROJECT_SOURCE_DIR}/common/neon_fft/src/NE10_rfft_float32.c"
 
         # Signal processing library
         "${PROJECT_SOURCE_DIR}/common/signal_processing/spl_sqrt.c"
@@ -59,12 +61,6 @@ function(add_aec3_test_module)
     list(FILTER RESAMPLER_SRC EXCLUDE REGEX ".*_neon\\.cc$")
     target_sources(${LIB_NAME} PRIVATE ${RESAMPLER_SRC})
 
-    # SSE2 for Ooura FFT
-    set_source_files_properties(
-        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/ooura_fft/ooura_fft_sse2.cc"
-        PROPERTIES COMPILE_FLAGS "-msse2"
-    )
-
     # AVX2+FMA for AEC3 and resampler SIMD files
     set_source_files_properties(
         "${PROJECT_SOURCE_DIR}/audio_processing/aec3/adaptive_fir_filter_avx2.cc"
@@ -83,7 +79,7 @@ function(add_aec3_test_module)
         "${PROJECT_SOURCE_DIR}/audio_processing/resample/"
         "${PROJECT_SOURCE_DIR}/common/signal_processing/"
         "${PROJECT_SOURCE_DIR}/common/signal_processing/include/"
-        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/ooura_fft/"
+        "${PROJECT_SOURCE_DIR}/common/neon_fft/include/"
         "${CMAKE_PREFIX_PATH}/include/"
     )
 
