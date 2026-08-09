@@ -1,9 +1,9 @@
-function(add_libAE_Resample_target)
-    set(LIB_NAME "AE_Resample")
+function(add_libAE_SRC_target)
+    set(LIB_NAME "AE_SRC")
 
     add_library(${LIB_NAME} STATIC
         # Interface
-        "${PROJECT_SOURCE_DIR}/interface/audio_engine_resample.cpp"
+        "${PROJECT_SOURCE_DIR}/interface/audio_engine_src.cpp"
 
         # WAV I/O utilities
         "${PROJECT_SOURCE_DIR}/utils/dr_wav.cc"

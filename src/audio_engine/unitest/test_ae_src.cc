@@ -10,7 +10,7 @@
 #include <cstring>
 #include <iostream>
 
-#include "interface/audio_engine_resample.h"
+#include "interface/audio_engine_src.h"
 #include "utils/dr_wav.h"
 
 

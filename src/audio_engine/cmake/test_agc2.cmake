@@ -86,7 +86,7 @@ function(add_agc2_test_module)
     # --- Test executable ---
     set(TEST_NAME "test_agc2")
 
-    add_executable(${TEST_NAME} "${PROJECT_SOURCE_DIR}/test/test_agc2.cc")
+    add_executable(${TEST_NAME} "${PROJECT_SOURCE_DIR}/unitest/internal/test_agc2.cc")
 
     if(WIN32)
         if(MINGW)

@@ -1,8 +1,8 @@
-function(add_ae_resample_test_module)
-    # --- Test executable using the libAE_Resample interface ---
-    set(TEST_NAME "test_ae_resample")
+function(add_ae_src_test_module)
+    # --- Test executable using the libAE_SRC interface ---
+    set(TEST_NAME "test_ae_src")
 
-    add_executable(${TEST_NAME} "${PROJECT_SOURCE_DIR}/unitest/test_ae_resample.cc")
+    add_executable(${TEST_NAME} "${PROJECT_SOURCE_DIR}/unitest/test_ae_src.cc")
 
     # Include directories
     target_include_directories(${TEST_NAME} PRIVATE
@@ -17,7 +17,7 @@ function(add_ae_resample_test_module)
     if(WIN32)
         if(MINGW)
             target_link_libraries(${TEST_NAME} PRIVATE
-                AE_Resample
+                AE_SRC
                 absl::strings
                 winmm
             )

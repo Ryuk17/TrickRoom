@@ -1,5 +1,5 @@
-function(add_libAE_Agc_target)
-    set(LIB_NAME "AE_Agc")
+function(add_libAE_AGC_target)
+    set(LIB_NAME "AE_AGC")
 
     add_library(${LIB_NAME} STATIC
         # Interface
