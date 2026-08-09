@@ -20,8 +20,8 @@
 #include "audio_processing/agc2/cpu_features.h"
 #include "utils/checks.h"
 #include "utils/safe_conversions.h"
-#include "third_party/rnnoise/src/rnn_activations.h"
-#include "third_party/rnnoise/src/rnn_vad_weights.h"
+#include "model_weights/rnnoise/src/rnn_activations.h"
+#include "model_weights/rnnoise/src/rnn_vad_weights.h"
 
 namespace webrtc {
 namespace rnn_vad {

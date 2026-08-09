@@ -22,7 +22,9 @@
 
 #include "audio_processing/vad/isac/bandwidth_info.h"
 #include "audio_processing/vad/isac/main/source/settings.h"
-#include "third_party/neon-fft/fft_types.h"
+
+// Minimal FFT type forward declaration (was third_party/neon-fft/fft_types.h).
+typedef struct FFTstr { int dummy; } FFTstr;
 
 typedef struct Bitstreamstruct {
   uint8_t stream[STREAM_SIZE_MAX];

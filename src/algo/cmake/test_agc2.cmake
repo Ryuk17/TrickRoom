@@ -47,7 +47,7 @@ function(add_agc2_test_module)
 
     # RNNoise weights
     target_sources(${LIB_NAME} PRIVATE
-        "${PROJECT_SOURCE_DIR}/third_party/rnnoise/src/rnn_vad_weights.cc"
+        "${PROJECT_SOURCE_DIR}/model_weights/rnnoise/src/rnn_vad_weights.cc"
     )
 
     # PFFFT (non-power-of-2 FFT support for RNN VAD spectral features)

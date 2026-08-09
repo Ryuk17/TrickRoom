@@ -1,5 +1,5 @@
 #include <cstdint>
-#include "third_party/rnnoise/src/rnn_vad_weights.h"
+#include "model_weights/rnnoise/src/rnn_vad_weights.h"
 
 namespace rnnoise {
 
