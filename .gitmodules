@@ -1,9 +1,9 @@
-[submodule "src/algo/third_party/abseil-cpp"]
-	path = src/algo/third_party/abseil-cpp
+[submodule "src/audio_engine/third_party/abseil-cpp"]
+	path = src/audio_engine/third_party/abseil-cpp
 	url = https://github.com/abseil/abseil-cpp.git
-[submodule "src/algo/third_party/pffft"]
-	path = src/algo/third_party/pffft
+[submodule "src/audio_engine/third_party/pffft"]
+	path = src/audio_engine/third_party/pffft
 	url = https://bitbucket.org/jpommier/pffft.git
-[submodule "src/algo/third_party/neon-fft"]
-	path = src/algo/third_party/neon-fft
+[submodule "src/audio_engine/third_party/neon-fft"]
+	path = src/audio_engine/third_party/neon-fft
 	url = https://github.com/Ryuk17/neon-fft
