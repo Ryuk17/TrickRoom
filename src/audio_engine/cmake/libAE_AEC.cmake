@@ -1,8 +1,11 @@
-function(add_aec3_test_module)
-    set(LIB_NAME "aec3_test_lib")
+function(add_libAE_AEC_target)
+    set(LIB_NAME "AE_AEC")
 
     add_library(${LIB_NAME} STATIC
-        # WAV I/O utilities
+        # Interface
+        "${PROJECT_SOURCE_DIR}/interface/audio_engine_aec.cpp"
+
+        # WAV I/O + utils
         "${PROJECT_SOURCE_DIR}/utils/dr_wav.cc"
         "${PROJECT_SOURCE_DIR}/utils/audio_util.cc"
         "${PROJECT_SOURCE_DIR}/utils/string_builder.cc"
@@ -75,6 +78,7 @@ function(add_aec3_test_module)
     # Include directories
     target_include_directories(${LIB_NAME} PUBLIC
         "${PROJECT_SOURCE_DIR}"
+        "${PROJECT_SOURCE_DIR}/interface/"
         "${PROJECT_SOURCE_DIR}/utils/"
         "${PROJECT_SOURCE_DIR}/audio_processing/resample/"
         "${PROJECT_SOURCE_DIR}/signal_processing/"
@@ -86,25 +90,11 @@ function(add_aec3_test_module)
     # Link abseil for header access
     target_link_libraries(${LIB_NAME} PUBLIC absl::strings)
 
-    # --- Test executable ---
-    set(TEST_NAME "test_aec3")
+    # Export symbols when building the library itself
+    target_compile_definitions(${LIB_NAME} PRIVATE AUDIO_ENGINE_EXPORTS)
 
-    add_executable(${TEST_NAME} "${PROJECT_SOURCE_DIR}/unitest/internal/test_aec3.cc")
-
-    if(WIN32)
-        if(MINGW)
-            target_link_libraries(${TEST_NAME} PRIVATE
-                ${LIB_NAME}
-                absl::strings
-                winmm
-            )
-        endif()
-    else()
-        target_link_libraries(${TEST_NAME} PRIVATE
-            ${LIB_NAME}
-            absl::strings
-        )
-    endif()
-
-    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+    # Output libAE_AEC.a to lib/
+    set_target_properties(${LIB_NAME} PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib"
+    )
 endfunction()
