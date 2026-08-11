@@ -7,6 +7,7 @@
  */
 
 #include "audio_engine_agc2.h"
+#include "audio_engine_log.h"
 
 #include <cmath>
 #include <memory>

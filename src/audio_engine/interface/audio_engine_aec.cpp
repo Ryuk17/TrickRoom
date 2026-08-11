@@ -7,6 +7,7 @@
  */
 
 #include "audio_engine_aec.h"
+#include "audio_engine_log.h"
 
 #include <new>
 #include <optional>

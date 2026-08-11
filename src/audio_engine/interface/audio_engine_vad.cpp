@@ -8,7 +8,7 @@
 
 #include <new>
 
-#include "audio_engine_def.h"
+#include "audio_engine_log.h"
 #include "audio_engine_vad.h"
 
 #include "audio_processing/vad/voice_activity_detector.h"

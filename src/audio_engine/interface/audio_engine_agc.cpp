@@ -8,7 +8,7 @@
 
 #include <new>
 
-#include "audio_engine_def.h"
+#include "audio_engine_log.h"
 #include "audio_engine_agc.h"
 
 #include "audio_processing/agc/gain_control.h"
