@@ -3,6 +3,10 @@
 #include "audio.h"
 #include <opus.h>
 
+/* Opus codec + playback rate: SRC output of the AEC→NS→AGC2→SRC pipeline.
+   (VOICE_SAMPLE_RATE in audio.h stays 48kHz: mic capture + pipeline rate) */
+#define VOICE_ENCODE_SAMPLE_RATE 16000
+
 #ifndef VOICE_H
 #define VOICE_H
 #define VOICECHAT
@@ -62,6 +66,7 @@ private:
 	unsigned int mic_buffer[NUM_PONG];
 	unsigned int mic_source;
 	unsigned short mic_pcm[NUM_PONG][MIC_BUFFER_SIZE];
+	unsigned short proc_pcm[NUM_PONG][MIC_BUFFER_SIZE / 3];	/* pipeline out @16k */
 
 	unsigned int decode_buffer[NUM_PONG];
 	unsigned short decode_pcm[NUM_PONG][MIC_BUFFER_SIZE];

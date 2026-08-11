@@ -37,7 +37,8 @@ int Voice::init(Audio &audio)
 	//OPUS_APPLICATION_AUDIO -- music
 	//OPUS_APPLICATION_VOIP -- voice
 	//OPUS_APPLICATION_RESTRICTED_LOWDELAY -- low delay voice
-	encoder = opus_encoder_create(VOICE_SAMPLE_RATE, 1, OPUS_APPLICATION_VOIP, &ret);
+	// Codec runs at 16kHz (output of the AEC→NS→AGC2→SRC pipeline)
+	encoder = opus_encoder_create(VOICE_ENCODE_SAMPLE_RATE, 1, OPUS_APPLICATION_VOIP, &ret);
 	if (ret < 0)
 	{
 		printf("failed to create an encoder: %s\n", opus_strerror(ret));
@@ -63,7 +64,7 @@ int Voice::init(Audio &audio)
 	}
 	*/
 
-	decoder = opus_decoder_create(VOICE_SAMPLE_RATE, 1, &ret);
+	decoder = opus_decoder_create(VOICE_ENCODE_SAMPLE_RATE, 1, &ret);
 	if (ret < 0)
 	{
 		printf("failed to create decoder: %s\n", opus_strerror(ret));
@@ -75,8 +76,8 @@ int Voice::init(Audio &audio)
 
 int Voice::encode(unsigned short *pcm, unsigned int size, unsigned char *data, int &num_bytes)
 {
-	// Encode the frame.
-	num_bytes = opus_encode(encoder, (opus_int16 *)pcm, (MIC_BUFFER_SIZE >> 1), data, MAX_PACKET_SIZE);
+	// Encode the frame (size = number of samples per channel, e.g. 1920 @16kHz).
+	num_bytes = opus_encode(encoder, (opus_int16 *)pcm, (int)size, data, MAX_PACKET_SIZE);
 	if (num_bytes < 0)
 	{
 		printf("encode failed: %s\n", opus_strerror(num_bytes));
@@ -181,8 +182,16 @@ int Voice::voice_send(Audio &audio, int sock, const char *ip, int port)
 		return 0;
 	}
 
+	// AEC → NS → AGC2 → SRC: 48kHz mic → 16kHz codec PCM
+	int proc_out = audio.process_pipeline((const short *)mic_pcm[pong], pcm_size >> 1,
+	                                      (short *)proc_pcm[pong], MIC_BUFFER_SIZE / 3);
+	if (proc_out <= 0)
+	{
+		return 0;
+	}
+
 	int num_bytes = 0;
-	encode(mic_pcm[pong], pcm_size, msg.data, num_bytes);
+	encode(proc_pcm[pong], proc_out, msg.data, num_bytes);
 
 	static int seq = 0;
 	msg.magic = 1337;
@@ -326,16 +335,22 @@ int Voice::voice_recv(Audio &audio, int sock, const char *ip, int port)
 				}
 				last_sequence = msg.sequence;
 
+				// Feed remote PCM (16kHz) to the AEC as far-end reference
+				if (pcm_size > 0 && pcm_size <= MIC_BUFFER_SIZE)
+				{
+					audio.push_farend((const short *)decode_pcm[pong], pcm_size / 2);
+				}
+
 
 				if (buffers_full)
 				{
 					alSourceUnqueueBuffers(decode_source, 1, &uiBuffer);
-					alBufferData(uiBuffer, AL_FORMAT_MONO16, decode_pcm[pong], pcm_size, VOICE_SAMPLE_RATE);
+					alBufferData(uiBuffer, AL_FORMAT_MONO16, decode_pcm[pong], pcm_size, VOICE_ENCODE_SAMPLE_RATE);
 					alSourceQueueBuffers(decode_source, 1, &uiBuffer);
 				}
 				else
 				{
-					alBufferData(decode_buffer[pong], AL_FORMAT_MONO16, decode_pcm[pong], pcm_size, VOICE_SAMPLE_RATE);
+					alBufferData(decode_buffer[pong], AL_FORMAT_MONO16, decode_pcm[pong], pcm_size, VOICE_ENCODE_SAMPLE_RATE);
 					alSourceQueueBuffers(decode_source, 1, &decode_buffer[pong]);
 				}
 
