@@ -16,6 +16,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
 - 接口代码**每个 API 预埋日志**（`LOG_DEBUG` 入口、`LOG_WARN`/`LOG_ERROR` 异常）
 - 库名 `libAE_xxx.a/so/dll`（如 `libAE_VAD`）
 - 改动前先出计划 review，通过后执行
+- fft要使用neon fft, ref中为其他fft参考，供替换成neon fft使用
 
 ## 一、分析阶段
 
