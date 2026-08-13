@@ -38,6 +38,10 @@ option(BUILD_AE_AGC  "Build libAE_AGC and test_ae_agc"   ON)
 option(BUILD_AE_AGC2 "Build libAE_AGC2 and test_ae_agc2" ON)
 option(BUILD_AE_AECM "Build libAE_AECM and test_ae_aecm" ON)
 option(BUILD_AE_AEC  "Build libAE_AEC and test_ae_aec"   ON)
+option(BUILD_AE_BF   "Build libAE_BF and test_ae_bf"     ON)
+option(BUILD_AE_HS   "Build libAE_HS and test_ae_hs"     ON)
+option(BUILD_AE_IE   "Build libAE_IE and test_ae_ie"     ON)
+option(BUILD_AE_TS   "Build libAE_TS and test_ae_ts"     ON)
 
 # ============================================================================
 # Helper: register an interface test executable
@@ -375,4 +379,157 @@ if(BUILD_AE_AEC)
     set_target_properties(AE_AEC PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib")
 
     add_ae_test(test_ae_aec "test_ae_aec.cc" AE_AEC)
+endif()
+
+# ============================================================================
+# libAE_BF + test_ae_bf
+# ============================================================================
+if(BUILD_AE_BF)
+    add_library(AE_BF STATIC
+        "${PROJECT_SOURCE_DIR}/interface/audio_engine_bf.cpp"
+        ${UTILS_WAV}
+        "${PROJECT_SOURCE_DIR}/utils/string_builder.cc"
+        ${NE10_FFT_SRC}
+        ${SIGNAL_PROCESSING_COMMON}
+        ${SIGNAL_PROCESSING_RESAMPLE}
+        "${PROJECT_SOURCE_DIR}/signal_processing/splitting_filter.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/randomization_functions.c"
+        ${UTILS_AUDIO_BUFFER_AND_SPLITTING}
+        # BF core sources
+        "${PROJECT_SOURCE_DIR}/audio_processing/beamforming/nonlinear_beamformer.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/beamforming/array_util.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/beamforming/covariance_matrix_generator.cc"
+        # BF dependencies (common_audio)
+        "${PROJECT_SOURCE_DIR}/signal_processing/lapped_transform.cc"
+        "${PROJECT_SOURCE_DIR}/signal_processing/window_generator.cc"
+        "${PROJECT_SOURCE_DIR}/utils/blocker.cc"
+        "${PROJECT_SOURCE_DIR}/utils/ring_buffer.c"
+        "${PROJECT_SOURCE_DIR}/utils/audio_ring_buffer.cc"
+        # RealFourier (NE10-based R2C/C2R FFT)
+        "${PROJECT_SOURCE_DIR}/signal_processing/real_fourier.cc"
+        "${PROJECT_SOURCE_DIR}/utils/aligned_malloc.cc"
+    )
+
+    target_sources(AE_BF PRIVATE ${RESAMPLER_SRC})
+
+    set_source_files_properties(
+        "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/sinc_resampler_avx2.cc"
+        PROPERTIES COMPILE_FLAGS "-mavx2 -mfma"
+    )
+
+    target_include_directories(AE_BF PUBLIC
+        ${LIB_COMMON_INCLUDES}
+        "${PROJECT_SOURCE_DIR}/audio_processing/beamforming/"
+        "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/"
+        ${NE10_FFT_INCLUDE}
+    )
+    target_link_libraries(AE_BF PUBLIC absl::strings)
+    target_compile_definitions(AE_BF PRIVATE AUDIO_ENGINE_EXPORTS)
+    set_target_properties(AE_BF PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib")
+
+    add_ae_test(test_ae_bf "test_ae_bf.cc" AE_BF)
+endif()
+
+# ============================================================================
+# libAE_HS + test_ae_hs
+# ============================================================================
+if(BUILD_AE_HS)
+    add_library(AE_HS STATIC
+        "${PROJECT_SOURCE_DIR}/interface/audio_engine_hs.cpp"
+        ${UTILS_WAV}
+        "${PROJECT_SOURCE_DIR}/audio_processing/howling_suppressor/howling_core.c"
+        "${PROJECT_SOURCE_DIR}/audio_processing/howling_suppressor/biquad.c"
+        "${PROJECT_SOURCE_DIR}/audio_processing/howling_suppressor/tone_detect.c"
+    )
+
+    target_include_directories(AE_HS PUBLIC
+        ${LIB_COMMON_INCLUDES}
+        "${PROJECT_SOURCE_DIR}/audio_processing/howling_suppressor/"
+    )
+    target_link_libraries(AE_HS PUBLIC absl::strings)
+    target_compile_definitions(AE_HS PRIVATE AUDIO_ENGINE_EXPORTS)
+    set_target_properties(AE_HS PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib")
+
+    add_ae_test(test_ae_hs "test_ae_hs.cc" AE_HS)
+endif()
+
+# ============================================================================
+# libAE_IE + test_ae_ie
+# ============================================================================
+if(BUILD_AE_IE)
+    add_library(AE_IE STATIC
+        "${PROJECT_SOURCE_DIR}/interface/audio_engine_ie.cpp"
+        ${UTILS_WAV}
+        "${PROJECT_SOURCE_DIR}/utils/string_builder.cc"
+        ${NE10_FFT_SRC}
+        ${SIGNAL_PROCESSING_COMMON}
+        ${SIGNAL_PROCESSING_RESAMPLE}
+        "${PROJECT_SOURCE_DIR}/signal_processing/splitting_filter.c"
+        "${PROJECT_SOURCE_DIR}/signal_processing/randomization_functions.c"
+        ${UTILS_AUDIO_BUFFER_AND_SPLITTING}
+        # IE core sources
+        "${PROJECT_SOURCE_DIR}/audio_processing/intelligibility_enhancer/intelligibility_enhancer.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/intelligibility_enhancer/intelligibility_utils.cc"
+        # Shared deps (same as BF: lapped_transform, real_fourier, window_generator, blocker)
+        "${PROJECT_SOURCE_DIR}/signal_processing/lapped_transform.cc"
+        "${PROJECT_SOURCE_DIR}/signal_processing/window_generator.cc"
+        "${PROJECT_SOURCE_DIR}/utils/blocker.cc"
+        "${PROJECT_SOURCE_DIR}/utils/ring_buffer.c"
+        "${PROJECT_SOURCE_DIR}/utils/audio_ring_buffer.cc"
+        # RealFourier (NE10-based R2C/C2R FFT)
+        "${PROJECT_SOURCE_DIR}/signal_processing/real_fourier.cc"
+        "${PROJECT_SOURCE_DIR}/utils/aligned_malloc.cc"
+    )
+
+    target_sources(AE_IE PRIVATE ${RESAMPLER_SRC})
+
+    set_source_files_properties(
+        "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/sinc_resampler_avx2.cc"
+        PROPERTIES COMPILE_FLAGS "-mavx2 -mfma"
+    )
+
+    target_include_directories(AE_IE PUBLIC
+        ${LIB_COMMON_INCLUDES}
+        "${PROJECT_SOURCE_DIR}/audio_processing/intelligibility_enhancer/"
+        "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/"
+        ${NE10_FFT_INCLUDE}
+    )
+    target_link_libraries(AE_IE PUBLIC absl::strings)
+    target_compile_definitions(AE_IE PRIVATE AUDIO_ENGINE_EXPORTS)
+    set_target_properties(AE_IE PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib")
+
+    add_ae_test(test_ae_ie "test_ae_ie.cc" AE_IE)
+endif()
+
+# ============================================================================
+# libAE_TS + test_ae_ts
+# ============================================================================
+if(BUILD_AE_TS)
+    add_library(AE_TS STATIC
+        "${PROJECT_SOURCE_DIR}/interface/audio_engine_ts.cpp"
+        ${UTILS_WAV}
+        ${NE10_FFT_SRC}
+        ${SIGNAL_PROCESSING_COMMON}
+        "${PROJECT_SOURCE_DIR}/signal_processing/randomization_functions.c"
+        # TS core sources
+        "${PROJECT_SOURCE_DIR}/audio_processing/transient_suppressor/transient_suppressor.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/transient_suppressor/transient_detector.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/transient_suppressor/moving_moments.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/transient_suppressor/wpd_node.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/transient_suppressor/wpd_tree.cc"
+        # FIR filter (plain C implementation)
+        "${PROJECT_SOURCE_DIR}/utils/fir_filter.cc"
+    )
+
+    target_include_directories(AE_TS PUBLIC
+        ${LIB_COMMON_INCLUDES}
+        "${PROJECT_SOURCE_DIR}/audio_processing/transient_suppressor/"
+        "${PROJECT_SOURCE_DIR}/audio_processing/noise_suppressor/"
+        ${NE10_FFT_INCLUDE}
+    )
+    target_link_libraries(AE_TS PUBLIC absl::strings)
+    target_compile_definitions(AE_TS PRIVATE AUDIO_ENGINE_EXPORTS)
+    set_target_properties(AE_TS PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib")
+
+    add_ae_test(test_ae_ts "test_ae_ts.cc" AE_TS)
 endif()
