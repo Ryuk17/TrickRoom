@@ -17,12 +17,12 @@
 #include "utils/stream_config.h"
 #include "utils/audio_buffer.h"
 #include "utils/apm_data_dumper.h"
-#include "audio_processing/agc2/adaptive_digital_gain_controller.h"
-#include "audio_processing/agc2/speech_level_estimator.h"
-#include "audio_processing/agc2/noise_level_estimator.h"
-#include "audio_processing/agc2/vad_wrapper.h"
-#include "audio_processing/agc2/cpu_features.h"
-#include "audio_processing/agc2/agc2_common.h"
+#include "audio_processing/automatic_gain_control2/adaptive_digital_gain_controller.h"
+#include "audio_processing/automatic_gain_control2/speech_level_estimator.h"
+#include "audio_processing/automatic_gain_control2/noise_level_estimator.h"
+#include "audio_processing/automatic_gain_control2/vad_wrapper.h"
+#include "audio_processing/automatic_gain_control2/cpu_features.h"
+#include "audio_processing/automatic_gain_control2/agc2_common.h"
 
 using namespace webrtc;
 

@@ -11,7 +11,7 @@
 
 #include <new>
 
-#include "audio_processing/aecm/echo_control_mobile.h"
+#include "audio_processing/acoustic_echo_cancellation_mobile/echo_control_mobile.h"
 
 using namespace webrtc;
 

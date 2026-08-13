@@ -13,7 +13,7 @@
 
 #include "utils/audio_buffer.h"
 #include "utils/stream_config.h"
-#include "audio_processing/ns/noise_suppressor.h"
+#include "audio_processing/noise_suppressor/noise_suppressor.h"
 
 
 /* ============================================================================

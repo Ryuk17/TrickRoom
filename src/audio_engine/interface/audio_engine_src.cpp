@@ -11,7 +11,7 @@
 #include "audio_engine_log.h"
 #include "audio_engine_src.h"
 
-#include "audio_processing/resample/resampler.h"
+#include "audio_processing/sample_rate_conversion/resampler.h"
 
 
 /* ============================================================================

@@ -11,7 +11,7 @@
 #include "audio_engine_log.h"
 #include "audio_engine_vad.h"
 
-#include "audio_processing/vad/voice_activity_detector.h"
+#include "audio_processing/voice_activity_detection/voice_activity_detector.h"
 
 
 /* ============================================================================

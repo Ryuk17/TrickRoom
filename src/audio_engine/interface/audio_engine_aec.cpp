@@ -14,8 +14,8 @@
 
 #include "utils/stream_config.h"
 #include "utils/audio_buffer.h"
-#include "audio_processing/aec3/echo_canceller3.h"
-#include "audio_processing/aec3/echo_canceller3_config.h"
+#include "audio_processing/acoustic_echo_cancellation3/echo_canceller3.h"
+#include "audio_processing/acoustic_echo_cancellation3/echo_canceller3_config.h"
 
 using namespace webrtc;
 

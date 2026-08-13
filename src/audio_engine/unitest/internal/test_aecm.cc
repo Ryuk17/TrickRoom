@@ -2,7 +2,7 @@
 #include <cstring>
 #include <iostream>
 #include "utils/dr_wav.h"
-#include "audio_processing/aecm/echo_control_mobile.h"
+#include "audio_processing/acoustic_echo_cancellation_mobile/echo_control_mobile.h"
 
 #define FRAME_LEN (160)
 

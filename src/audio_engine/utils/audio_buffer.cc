@@ -19,7 +19,7 @@
 #include "utils/stream_config.h"
 #include "utils/channel_buffer.h"
 #include "utils/audio_util.h"
-#include "audio_processing/resample/push_sinc_resampler.h"
+#include "audio_processing/sample_rate_conversion/push_sinc_resampler.h"
 #include "signal_processing/splitting_filter.h"
 #include "utils/checks.h"
 

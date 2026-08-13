@@ -10,7 +10,7 @@
 #include "utils/dr_wav.h"
 #include "utils/stream_config.h"
 #include "utils/audio_buffer.h"
-#include "audio_processing/vad/voice_activity_detector.h"
+#include "audio_processing/voice_activity_detection/voice_activity_detector.h"
 
 #define FRAME_LEN (160)
 

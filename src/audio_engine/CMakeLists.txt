@@ -110,7 +110,7 @@ set(NE10_FFT_INCLUDE
 )
 
 # ---- Resampler sources (used by modules that need AudioBuffer) ----
-file(GLOB RESAMPLER_SRC "${PROJECT_SOURCE_DIR}/audio_processing/resample/*.cc")
+file(GLOB RESAMPLER_SRC "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/*.cc")
 list(FILTER RESAMPLER_SRC EXCLUDE REGEX ".*_neon\\.cc$")
 
 # ---- Common include directories for libraries ----
@@ -149,26 +149,26 @@ if(BUILD_AE_VAD)
         "${PROJECT_SOURCE_DIR}/signal_processing/splitting_filter.c"
         "${PROJECT_SOURCE_DIR}/signal_processing/randomization_functions.c"
         "${PROJECT_SOURCE_DIR}/signal_processing/cross_correlation.c"
-        "${PROJECT_SOURCE_DIR}/audio_processing/vad/vad_core/webrtc_vad.c"
-        "${PROJECT_SOURCE_DIR}/audio_processing/vad/vad_core/vad_core.c"
-        "${PROJECT_SOURCE_DIR}/audio_processing/vad/vad_core/vad_filterbank.c"
-        "${PROJECT_SOURCE_DIR}/audio_processing/vad/vad_core/vad_gmm.c"
-        "${PROJECT_SOURCE_DIR}/audio_processing/vad/vad_core/vad_sp.c"
+        "${PROJECT_SOURCE_DIR}/audio_processing/voice_activity_detection/vad_core/webrtc_vad.c"
+        "${PROJECT_SOURCE_DIR}/audio_processing/voice_activity_detection/vad_core/vad_core.c"
+        "${PROJECT_SOURCE_DIR}/audio_processing/voice_activity_detection/vad_core/vad_filterbank.c"
+        "${PROJECT_SOURCE_DIR}/audio_processing/voice_activity_detection/vad_core/vad_gmm.c"
+        "${PROJECT_SOURCE_DIR}/audio_processing/voice_activity_detection/vad_core/vad_sp.c"
         ${UTILS_AUDIO_BUFFER_AND_SPLITTING}
     )
 
-    file(GLOB VAD_SRC "${PROJECT_SOURCE_DIR}/audio_processing/vad/*.cc")
-    file(GLOB ISAC_VAD_SRC "${PROJECT_SOURCE_DIR}/audio_processing/vad/isac/main/source/*.c")
+    file(GLOB VAD_SRC "${PROJECT_SOURCE_DIR}/audio_processing/voice_activity_detection/*.cc")
+    file(GLOB ISAC_VAD_SRC "${PROJECT_SOURCE_DIR}/audio_processing/voice_activity_detection/isac/main/source/*.c")
     target_sources(AE_VAD PRIVATE ${VAD_SRC} ${ISAC_VAD_SRC} ${RESAMPLER_SRC})
 
     set_source_files_properties(
-        "${PROJECT_SOURCE_DIR}/audio_processing/resample/sinc_resampler_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/sinc_resampler_avx2.cc"
         PROPERTIES COMPILE_FLAGS "-mavx2 -mfma"
     )
 
     target_include_directories(AE_VAD PUBLIC
         ${LIB_COMMON_INCLUDES}
-        "${PROJECT_SOURCE_DIR}/audio_processing/resample/"
+        "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/"
         ${NE10_FFT_INCLUDE}
     )
     target_link_libraries(AE_VAD PUBLIC absl::strings)
@@ -193,13 +193,13 @@ if(BUILD_AE_SRC)
     target_sources(AE_SRC PRIVATE ${RESAMPLER_SRC})
 
     set_source_files_properties(
-        "${PROJECT_SOURCE_DIR}/audio_processing/resample/sinc_resampler_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/sinc_resampler_avx2.cc"
         PROPERTIES COMPILE_FLAGS "-mavx2 -mfma"
     )
 
     target_include_directories(AE_SRC PUBLIC
         ${LIB_COMMON_INCLUDES}
-        "${PROJECT_SOURCE_DIR}/audio_processing/resample/"
+        "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/"
     )
     target_link_libraries(AE_SRC PUBLIC absl::strings)
     target_compile_definitions(AE_SRC PRIVATE AUDIO_ENGINE_EXPORTS)
@@ -222,12 +222,12 @@ if(BUILD_AE_NS)
         ${UTILS_AUDIO_BUFFER_AND_SPLITTING}
     )
 
-    file(GLOB NS_SRC "${PROJECT_SOURCE_DIR}/audio_processing/ns/*.cc")
+    file(GLOB NS_SRC "${PROJECT_SOURCE_DIR}/audio_processing/noise_suppressor/*.cc")
     target_sources(AE_NS PRIVATE ${NS_SRC} ${RESAMPLER_SRC})
 
     target_include_directories(AE_NS PUBLIC
         ${LIB_COMMON_INCLUDES}
-        "${PROJECT_SOURCE_DIR}/audio_processing/resample/"
+        "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/"
         ${NE10_FFT_INCLUDE}
     )
     target_link_libraries(AE_NS PUBLIC absl::strings)
@@ -248,7 +248,7 @@ if(BUILD_AE_AGC)
         ${SIGNAL_PROCESSING_RESAMPLE}
     )
 
-    file(GLOB AGC_SRC "${PROJECT_SOURCE_DIR}/audio_processing/agc/*.cc")
+    file(GLOB AGC_SRC "${PROJECT_SOURCE_DIR}/audio_processing/automatic_gain_control/*.cc")
     target_sources(AE_AGC PRIVATE ${AGC_SRC})
 
     target_include_directories(AE_AGC PUBLIC ${LIB_COMMON_INCLUDES})
@@ -277,19 +277,19 @@ if(BUILD_AE_AGC2)
         "${PROJECT_SOURCE_DIR}/third_party/pffft/fftpack.c"
     )
 
-    file(GLOB AGC2_CORE "${PROJECT_SOURCE_DIR}/audio_processing/agc2/*.cc")
-    file(GLOB RNN_VAD_SRC "${PROJECT_SOURCE_DIR}/audio_processing/agc2/rnn_vad/*.cc")
+    file(GLOB AGC2_CORE "${PROJECT_SOURCE_DIR}/audio_processing/automatic_gain_control2/*.cc")
+    file(GLOB RNN_VAD_SRC "${PROJECT_SOURCE_DIR}/audio_processing/automatic_gain_control2/rnn_vad/*.cc")
     target_sources(AE_AGC2 PRIVATE ${AGC2_CORE} ${RNN_VAD_SRC} ${RESAMPLER_SRC})
 
     set_source_files_properties(
-        "${PROJECT_SOURCE_DIR}/audio_processing/agc2/rnn_vad/vector_math_avx2.cc"
-        "${PROJECT_SOURCE_DIR}/audio_processing/resample/sinc_resampler_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/automatic_gain_control2/rnn_vad/vector_math_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/sinc_resampler_avx2.cc"
         PROPERTIES COMPILE_FLAGS "-mavx2 -mfma"
     )
 
     target_include_directories(AE_AGC2 PUBLIC
         ${LIB_COMMON_INCLUDES}
-        "${PROJECT_SOURCE_DIR}/audio_processing/resample/"
+        "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/"
         "${PROJECT_SOURCE_DIR}/third_party/pffft/"
     )
     target_link_libraries(AE_AGC2 PUBLIC absl::strings)
@@ -316,7 +316,7 @@ if(BUILD_AE_AECM)
         "${PROJECT_SOURCE_DIR}/signal_processing/delay_estimator_wrapper.cc"
     )
 
-    file(GLOB AECM_SRC "${PROJECT_SOURCE_DIR}/audio_processing/aecm/*.cc")
+    file(GLOB AECM_SRC "${PROJECT_SOURCE_DIR}/audio_processing/acoustic_echo_cancellation_mobile/*.cc")
     list(FILTER AECM_SRC EXCLUDE REGEX ".*_mips\\.cc$")
     list(FILTER AECM_SRC EXCLUDE REGEX ".*_neon\\.cc$")
     target_sources(AE_AECM PRIVATE ${AECM_SRC})
@@ -340,7 +340,7 @@ if(BUILD_AE_AEC)
         "${PROJECT_SOURCE_DIR}/interface/audio_engine_aec.cpp"
         ${UTILS_WAV}
         "${PROJECT_SOURCE_DIR}/utils/string_builder.cc"
-        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/echo_canceller3_config.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/acoustic_echo_cancellation3/echo_canceller3_config.cc"
         ${NE10_FFT_SRC}
         ${SIGNAL_PROCESSING_COMMON}
         ${SIGNAL_PROCESSING_RESAMPLE}
@@ -350,24 +350,24 @@ if(BUILD_AE_AEC)
         "${PROJECT_SOURCE_DIR}/signal_processing/cascaded_biquad_filter.cc"
     )
 
-    file(GLOB AEC3_SRC "${PROJECT_SOURCE_DIR}/audio_processing/aec3/*.cc")
+    file(GLOB AEC3_SRC "${PROJECT_SOURCE_DIR}/audio_processing/acoustic_echo_cancellation3/*.cc")
     list(FILTER AEC3_SRC EXCLUDE REGEX ".*neural_feature_extractor\\.cc$")
     list(FILTER AEC3_SRC EXCLUDE REGEX ".*neural_residual_echo_estimator_impl\\.cc$")
     target_sources(AE_AEC PRIVATE ${AEC3_SRC} ${RESAMPLER_SRC})
 
     set_source_files_properties(
-        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/adaptive_fir_filter_avx2.cc"
-        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/adaptive_fir_filter_erl_avx2.cc"
-        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/fft_data_avx2.cc"
-        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/matched_filter_avx2.cc"
-        "${PROJECT_SOURCE_DIR}/audio_processing/aec3/vector_math_avx2.cc"
-        "${PROJECT_SOURCE_DIR}/audio_processing/resample/sinc_resampler_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/acoustic_echo_cancellation3/adaptive_fir_filter_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/acoustic_echo_cancellation3/adaptive_fir_filter_erl_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/acoustic_echo_cancellation3/fft_data_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/acoustic_echo_cancellation3/matched_filter_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/acoustic_echo_cancellation3/vector_math_avx2.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/sinc_resampler_avx2.cc"
         PROPERTIES COMPILE_FLAGS "-mavx2 -mfma"
     )
 
     target_include_directories(AE_AEC PUBLIC
         ${LIB_COMMON_INCLUDES}
-        "${PROJECT_SOURCE_DIR}/audio_processing/resample/"
+        "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/"
         ${NE10_FFT_INCLUDE}
     )
     target_link_libraries(AE_AEC PUBLIC absl::strings)

@@ -2,7 +2,7 @@
 #include <cstring>
 #include <iostream>
 #include "utils/dr_wav.h"
-#include "audio_processing/aec3/echo_canceller3.h"
+#include "audio_processing/acoustic_echo_cancellation3/echo_canceller3.h"
 #include "utils/stream_config.h"
 #include "utils/audio_buffer.h"
 

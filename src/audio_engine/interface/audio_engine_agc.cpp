@@ -11,7 +11,7 @@
 #include "audio_engine_log.h"
 #include "audio_engine_agc.h"
 
-#include "audio_processing/agc/gain_control.h"
+#include "audio_processing/automatic_gain_control/gain_control.h"
 
 using namespace webrtc;
 

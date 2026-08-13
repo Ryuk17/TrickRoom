@@ -7,7 +7,7 @@
  */
 #include <iostream>
 #include "utils/dr_wav.h"
-#include "audio_processing/agc/gain_control.h"
+#include "audio_processing/automatic_gain_control/gain_control.h"
 
 #define FRAME_LEN (160)
 

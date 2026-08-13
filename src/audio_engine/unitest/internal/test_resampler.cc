@@ -7,7 +7,7 @@
  */
 #include <iostream>
 #include "utils/dr_wav.h"
-#include "audio_processing/resample/resampler.h"
+#include "audio_processing/sample_rate_conversion/resampler.h"
 
 #define FRAME_LEN (160)
 #define RESAMPLED_FRAME_LEN (FRAME_LEN * 4)
