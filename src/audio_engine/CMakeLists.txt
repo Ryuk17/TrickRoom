@@ -42,6 +42,7 @@ option(BUILD_AE_BF   "Build libAE_BF and test_ae_bf"     ON)
 option(BUILD_AE_HS   "Build libAE_HS and test_ae_hs"     ON)
 option(BUILD_AE_IE   "Build libAE_IE and test_ae_ie"     ON)
 option(BUILD_AE_TS   "Build libAE_TS and test_ae_ts"     ON)
+option(BUILD_AE_DR   "Build libAE_DR and test_ae_dr"     ON)
 
 # ============================================================================
 # Helper: register an interface test executable
@@ -532,4 +533,46 @@ if(BUILD_AE_TS)
     set_target_properties(AE_TS PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib")
 
     add_ae_test(test_ae_ts "test_ae_ts.cc" AE_TS)
+endif()
+
+# ============================================================================
+# libAE_DR + test_ae_dr
+# ============================================================================
+# Eigen (header-only, double-precision FFT required by the dereverberation
+# EKF — kept on purpose, see real_fft.h). Vendored copy is used by default;
+# override with -DEIGEN3_ROOT=<eigen source root>.
+set(EIGEN3_ROOT "" CACHE PATH "Path to Eigen source root (optional, vendored copy used by default)")
+
+if(BUILD_AE_DR)
+    find_path(EIGEN3_INCLUDE_DIR "Eigen/Dense"
+        HINTS "${PROJECT_SOURCE_DIR}/third_party/eigen-5.0.0"
+              ${EIGEN3_ROOT} $ENV{EIGEN3_ROOT}
+        NO_DEFAULT_PATH
+    )
+    if(NOT EIGEN3_INCLUDE_DIR)
+        message(FATAL_ERROR "Eigen not found (BUILD_AE_DR=ON). "
+                "Set -DEIGEN3_ROOT=<eigen source root> to point at Eigen.")
+    endif()
+    message(STATUS "EIGEN3_INCLUDE_DIR = ${EIGEN3_INCLUDE_DIR}")
+
+    add_library(AE_DR STATIC
+        "${PROJECT_SOURCE_DIR}/interface/audio_engine_dr.cpp"
+        ${UTILS_WAV}
+        "${PROJECT_SOURCE_DIR}/audio_processing/dereverberation/dereverberation.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/dereverberation/gaussian_likelihood.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/dereverberation/hmm_dictionary.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/dereverberation/mel_filterbank.cc"
+        "${PROJECT_SOURCE_DIR}/audio_processing/dereverberation/real_fft.cc"
+    )
+
+    target_include_directories(AE_DR PUBLIC
+        ${LIB_COMMON_INCLUDES}
+        "${PROJECT_SOURCE_DIR}/audio_processing/"
+        ${EIGEN3_INCLUDE_DIR}
+    )
+    target_link_libraries(AE_DR PUBLIC absl::strings)
+    target_compile_definitions(AE_DR PRIVATE AUDIO_ENGINE_EXPORTS)
+    set_target_properties(AE_DR PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/lib")
+
+    add_ae_test(test_ae_dr "test_ae_dr.cc" AE_DR)
 endif()
