@@ -7,7 +7,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
 
 # 封装音频算法为统一 C 接口
 
-把 `src/audio_engine/audio_processing` 中的某个 WebRTC 算法（VAD、AEC、ANR、AGC...）封装成统一 C 接口库 `libAE_xxx`。**参考的已完成范例：VAD**（`interface/audio_engine_vad.h/.cpp`、`cmake/libAE_VAD.cmake`、`unitest/test_ae_vad.cc`）。
+把 `src/audio_engine/audio_processing` 中的某个算法（VAD、AEC、ANR、AGC...）封装成统一 C 接口库 `libAE_xxx`。**参考的已完成范例：VAD**（`interface/audio_engine_vad.h/.cpp`、`cmake/libAE_VAD.cmake`、`unitest/test_ae_vad.cc`）。
 
 ## 硬约束（CLAUDE.md 规定）
 
