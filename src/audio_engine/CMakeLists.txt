@@ -545,7 +545,7 @@ set(EIGEN3_ROOT "" CACHE PATH "Path to Eigen source root (optional, vendored cop
 
 if(BUILD_AE_DR)
     find_path(EIGEN3_INCLUDE_DIR "Eigen/Dense"
-        HINTS "${PROJECT_SOURCE_DIR}/third_party/eigen-5.0.0"
+        HINTS "${PROJECT_SOURCE_DIR}/third_party/eigen"
               ${EIGEN3_ROOT} $ENV{EIGEN3_ROOT}
         NO_DEFAULT_PATH
     )

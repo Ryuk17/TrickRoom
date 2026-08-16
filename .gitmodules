@@ -7,3 +7,7 @@
 [submodule "src/audio_engine/third_party/neon-fft"]
 	path = src/audio_engine/third_party/neon-fft
 	url = https://github.com/Ryuk17/neon-fft
+
+[submodule "src/audio_engine/third_party/eigen"]
+	path = src/audio_engine/third_party/eigen
+	url = https://gitlab.com/libeigen/eigen.git
