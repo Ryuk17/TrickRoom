@@ -17,9 +17,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
+# Third-party dependencies (submodules) live at the repository root
+set(THIRD_PARTY_ROOT "${PROJECT_SOURCE_DIR}/../../third_party")
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_PREFIX_PATH
-    "${PROJECT_SOURCE_DIR}/third_party/abseil-cpp/install"
+    "${THIRD_PARTY_ROOT}/abseil-cpp/install"
     ${CMAKE_PREFIX_PATH}
 )
 
@@ -104,14 +107,14 @@ set(SIGNAL_PROCESSING_RESAMPLE
 )
 
 set(NE10_FFT_SRC
-    "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_fft.c"
-    "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_fft_float32.c"
-    "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_fft_generic_float32.c"
-    "${PROJECT_SOURCE_DIR}/third_party/neon-fft/src/NE10_rfft_float32.c"
+    "${THIRD_PARTY_ROOT}/neon-fft/src/NE10_fft.c"
+    "${THIRD_PARTY_ROOT}/neon-fft/src/NE10_fft_float32.c"
+    "${THIRD_PARTY_ROOT}/neon-fft/src/NE10_fft_generic_float32.c"
+    "${THIRD_PARTY_ROOT}/neon-fft/src/NE10_rfft_float32.c"
 )
 
 set(NE10_FFT_INCLUDE
-    "${PROJECT_SOURCE_DIR}/third_party/neon-fft/include/"
+    "${THIRD_PARTY_ROOT}/neon-fft/include/"
 )
 
 # ---- Resampler sources (used by modules that need AudioBuffer) ----
@@ -278,8 +281,8 @@ if(BUILD_AE_AGC2)
         ${UTILS_AUDIO_BUFFER_AND_SPLITTING}
         "${PROJECT_SOURCE_DIR}/model_weights/rnnoise/src/rnn_vad_weights.cc"
         "${PROJECT_SOURCE_DIR}/signal_processing/pffft_wrapper.cc"
-        "${PROJECT_SOURCE_DIR}/third_party/pffft/pffft.c"
-        "${PROJECT_SOURCE_DIR}/third_party/pffft/fftpack.c"
+        "${THIRD_PARTY_ROOT}/pffft/pffft.c"
+        "${THIRD_PARTY_ROOT}/pffft/fftpack.c"
     )
 
     file(GLOB AGC2_CORE "${PROJECT_SOURCE_DIR}/audio_processing/automatic_gain_control2/*.cc")
@@ -295,7 +298,7 @@ if(BUILD_AE_AGC2)
     target_include_directories(AE_AGC2 PUBLIC
         ${LIB_COMMON_INCLUDES}
         "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/"
-        "${PROJECT_SOURCE_DIR}/third_party/pffft/"
+        "${THIRD_PARTY_ROOT}/pffft/"
     )
     target_link_libraries(AE_AGC2 PUBLIC absl::strings)
     target_compile_definitions(AE_AGC2 PRIVATE AUDIO_ENGINE_EXPORTS)
@@ -545,7 +548,7 @@ set(EIGEN3_ROOT "" CACHE PATH "Path to Eigen source root (optional, vendored cop
 
 if(BUILD_AE_DR)
     find_path(EIGEN3_INCLUDE_DIR "Eigen/Dense"
-        HINTS "${PROJECT_SOURCE_DIR}/third_party/eigen"
+        HINTS "${THIRD_PARTY_ROOT}/eigen"
               ${EIGEN3_ROOT} $ENV{EIGEN3_ROOT}
         NO_DEFAULT_PATH
     )
