@@ -54,6 +54,7 @@ TrickRoom/
 ├── LICENSE                         # Apache License 2.0
 ├── assets/                         # Icons and static resources
 ├── bin/                            # Prebuilt binaries and configuration files
+├── third_party/                    # Dependencies as git submodules (abseil, eigen, NE10, pffft, OpenAL, opus)
 └── src/
     ├── *.cpp / *.h                 # Chat room application (client/server)
     └── audio_engine/               # Unified audio algorithm libraries (libAE_xxx)
@@ -66,7 +67,6 @@ TrickRoom/
         │   └── internal/test_*.cc  # Reference tests calling the algorithm classes directly
         ├── data/                   # WAV test vectors and expected outputs
         ├── model_weights/          # Neural-network weights (e.g. RNN-VAD)
-        ├── third_party/            # Dependencies as git submodules
         ├── toolchains/             # CMake toolchain files (Windows / ARM Linux)
         └── CMakeLists.txt          # Builds all libAE_xxx libraries and tests
 ```
@@ -77,12 +77,14 @@ TrickRoom/
 
 - CMake ≥ 3.10 and a C++20 compiler
 - Git submodules initialized: `git submodule update --init`
-- **abseil-cpp** built and installed to `src/audio_engine/third_party/abseil-cpp/install`
+- **abseil-cpp** built and installed to `third_party/abseil-cpp/install`
   (the build locates it through `find_package(absl)` via `CMAKE_PREFIX_PATH`)
 - **Eigen** is provided as a submodule (`third_party/eigen`, pinned to the 5.0.0 tag).
   It is required by `libAE_DR` only; point `-DEIGEN3_ROOT=<path>` at another copy if desired.
 - NE10 (`neon-fft`) and pffft submodules are used by the FFT-based modules
   (`libAE_VAD`, `libAE_NS`, `libAE_AEC`, `libAE_AECM`, `libAE_BF`, `libAE_IE`, `libAE_TS`).
+- **OpenAL Soft** (`third_party/openal-soft`) and **Opus** (`third_party/opus`)
+  submodules are used by the chat-room application, not by the engine libraries.
 
 ### Configure and Build
 
@@ -201,7 +203,8 @@ every dependency before distributing or embedding:
 | pffft                                              | BSD-like permissive license                                      |
 | Eigen                                              | MPL 2.0 (a few files under BSD or other MPL2-compatible terms)   |
 | Voicebox v_spendred (libAE_DR reference)           | See the upstream [Voicebox](https://github.com/ImperialCollegeLondon/sap-voicebox) project |
-| Application dependencies (e.g. OpenAL in `third_party/`) | See their respective licenses                              |
+| OpenAL Soft (`third_party/openal-soft`)            | LGPL 2.0 or later                                                |
+| Opus (`third_party/opus`)                          | BSD 3-Clause                                                     |
 
 > This overview is provided for convenience only and does not constitute legal advice.
 

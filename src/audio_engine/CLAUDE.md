@@ -19,7 +19,7 @@
 `data`: 音频测试数据
 `interface`: 对外接口  
 `unitest`: 算法单元测试代码  
-`third_party`: 第三方依赖代码  
+`third_party`: 第三方依赖代码（位于仓库根目录 `third_party`，git submodule）  
 `toolchains`: 编译相关toolchains    
 `utils`: 算法依赖的公共代码(与计算无关)  
 `CMakeLists.txt`: 算法编译CMakeLists.txt

@@ -52,6 +52,7 @@ TrickRoom/
 ├── LICENSE                         # Apache License 2.0
 ├── assets/                         # 图标等静态资源
 ├── bin/                            # 预编译程序及配置文件
+├── third_party/                    # git submodule 形式的第三方依赖（abseil、eigen、NE10、pffft、OpenAL、opus）
 └── src/
     ├── *.cpp / *.h                 # 聊天室应用（客户端/服务端）
     └── audio_engine/               # 统一音频算法库（libAE_xxx）
@@ -64,7 +65,6 @@ TrickRoom/
         │   └── internal/test_*.cc  # 直接调用算法类的内部参考测试
         ├── data/                   # WAV 测试数据与期望输出
         ├── model_weights/          # 神经网络权重（如 RNN-VAD）
-        ├── third_party/            # git submodule 形式的第三方依赖
         ├── toolchains/             # CMake 交叉编译工具链（Windows / ARM Linux）
         └── CMakeLists.txt          # 编译所有 libAE_xxx 库与测试
 ```
@@ -75,12 +75,14 @@ TrickRoom/
 
 - CMake ≥ 3.10，支持 C++20 的编译器
 - 初始化 git submodule：`git submodule update --init`
-- **abseil-cpp** 需编译并安装到 `src/audio_engine/third_party/abseil-cpp/install`
+- **abseil-cpp** 需编译并安装到 `third_party/abseil-cpp/install`
   （构建时通过 `CMAKE_PREFIX_PATH` 的 `find_package(absl)` 定位）
 - **Eigen** 以 submodule 形式提供（`third_party/eigen`，锁定 5.0.0 tag），
   仅 `libAE_DR` 依赖；如需使用其他副本，用 `-DEIGEN3_ROOT=<路径>` 指定
 - NE10（`neon-fft`）与 pffft submodule 供 FFT 类模块使用
   （`libAE_VAD`、`libAE_NS`、`libAE_AEC`、`libAE_AECM`、`libAE_BF`、`libAE_IE`、`libAE_TS`）
+- **OpenAL Soft**（`third_party/openal-soft`）与 **Opus**（`third_party/opus`）
+  submodule 供聊天室应用使用，引擎库本身不依赖
 
 ### 配置与编译
 
@@ -194,7 +196,8 @@ TrickRoom 本体以 [Apache License 2.0](LICENSE) 发布。
 | pffft                                             | BSD 类宽松许可证                                                  |
 | Eigen                                             | MPL 2.0（少量文件为 BSD 或其他与 MPL2 兼容的条款）                |
 | Voicebox v_spendred（libAE_DR 参考实现）           | 参见上游 [Voicebox](https://github.com/ImperialCollegeLondon/sap-voicebox) 项目 |
-| 应用层依赖（如 `third_party/` 中的 OpenAL）        | 参见其各自的许可证                                                |
+| OpenAL Soft（`third_party/openal-soft`）           | LGPL 2.0 或更高版本                                                |
+| Opus（`third_party/opus`）                         | BSD 3-Clause                                                       |
 
 > 以上信息仅为方便说明，不构成法律建议。
 
