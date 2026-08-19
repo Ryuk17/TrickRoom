@@ -33,10 +33,10 @@
 #define RGB2(b,g,r)          ((COLORREF)(((BYTE)(r)|((WORD)((BYTE)(g))<<8))|(((DWORD)(BYTE)(b))<<16)))
 
 
-class Zoomy
+class TrickRoom
 {
 public:
-	Zoomy();
+	TrickRoom();
 	void init(void *param1, void *param2);
 	void capture();
 	void resize(int width, int height);

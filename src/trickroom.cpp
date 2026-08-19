@@ -1,10 +1,10 @@
-#include "zoomy.h"
+#include "trickroom.h"
 
 
-int Zoomy::connect_sframe_sock = -1;
-int Zoomy::enable_video = 1;
-bool Zoomy::enable_voice = false;
-bool Zoomy::mute_microphone = false;
+int TrickRoom::connect_sframe_sock = -1;
+int TrickRoom::enable_video = 1;
+bool TrickRoom::enable_voice = false;
+bool TrickRoom::mute_microphone = false;
 
 // globals (Large buffers cant be on stack)
 queue_t squeue;
@@ -24,7 +24,7 @@ unsigned char cap_image_last[FRAME_SIZE];
 
 
 
-Zoomy::Zoomy()
+TrickRoom::TrickRoom()
 {
 	initialized = false;
 	server_sock = -1;	// listen socket
@@ -40,7 +40,7 @@ Zoomy::Zoomy()
 	sprintf(client_ip, "");
 }
 
-void Zoomy::init(void *param1, void *param2)
+void TrickRoom::init(void *param1, void *param2)
 {
 	hwnd = (HWND)param1;
 
@@ -49,13 +49,13 @@ void Zoomy::init(void *param1, void *param2)
 
 	char path[MAX_PATH] = { 0 };
 	GetCurrentDirectory(MAX_PATH, path);
-	lstrcat(path, TEXT("\\zoomy.ini"));
+	lstrcat(path, TEXT("\\trickroom.ini"));
 
-	listen_port = GetPrivateProfileInt(TEXT("zoomy"), TEXT("listen"), 65535, path);
-	connect_port = GetPrivateProfileInt(TEXT("zoomy"), TEXT("connect"), 65534, path);
-	GetPrivateProfileString(TEXT("zoomy"), TEXT("ip"), "127.0.0.1", connect_ip, MAX_PATH, path);
-	GetPrivateProfileString(TEXT("zoomy"), TEXT("localip"), "127.0.0.1", listen_ip, MAX_PATH, path);
-	enable_video = GetPrivateProfileInt(TEXT("zoomy"), TEXT("capture"), 1, path);
+	listen_port = GetPrivateProfileInt(TEXT("trickroom"), TEXT("listen"), 65535, path);
+	connect_port = GetPrivateProfileInt(TEXT("trickroom"), TEXT("connect"), 65534, path);
+	GetPrivateProfileString(TEXT("trickroom"), TEXT("ip"), "127.0.0.1", connect_ip, MAX_PATH, path);
+	GetPrivateProfileString(TEXT("trickroom"), TEXT("localip"), "127.0.0.1", listen_ip, MAX_PATH, path);
+	enable_video = GetPrivateProfileInt(TEXT("trickroom"), TEXT("capture"), 1, path);
 
 
 	// Create a checkerboard pattern
@@ -112,7 +112,7 @@ void Zoomy::init(void *param1, void *param2)
 
 }
 
-void Zoomy::capture()
+void TrickRoom::capture()
 {
 	int rsize = 0;
 
@@ -142,7 +142,7 @@ void Zoomy::capture()
 			dequeue(&rqueue, rbuffer, FRAME_PACKET_SIZE);
 			yuy2_to_rgb(&rbuffer[sizeof(header_t)], (COLORREF *)recv_image);
 			InvalidateRect(hwnd, &client_area, FALSE);
-			Zoomy::enable_voice = true;
+			TrickRoom::enable_voice = true;
 		}
 		else
 		{
@@ -231,7 +231,7 @@ void Zoomy::capture()
 	Sleep(0);
 }
 
-void Zoomy::step()
+void TrickRoom::step()
 {
 	// Dont attempt anything until video is streaming
 	if (initialized == false)
@@ -267,7 +267,7 @@ void Zoomy::step()
 
 }
 
-void Zoomy::resize(int width, int height)
+void TrickRoom::resize(int width, int height)
 {
 
 	static bool once = false;
@@ -318,12 +318,12 @@ void Zoomy::resize(int width, int height)
 
 }
 
-void Zoomy::destroy()
+void TrickRoom::destroy()
 {
 
 }
 
-void Zoomy::paint(HDC hdc)
+void TrickRoom::paint(HDC hdc)
 {
 	draw_pixels(hdc, DISPLAY_WIDTH, 0, WIDTH, HEIGHT, DISPLAY_WIDTH, DISPLAY_HEIGHT, recv_image);
 
@@ -352,7 +352,7 @@ void Zoomy::paint(HDC hdc)
 //	TextOut(hdc, 50, 550, state, strlen(state));
 }
 
-void Zoomy::draw_pixels(HDC hdc, int xoff, int yoff, int width, int height, int scalew, int scaleh, unsigned char *data)
+void TrickRoom::draw_pixels(HDC hdc, int xoff, int yoff, int width, int height, int scalew, int scaleh, unsigned char *data)
 {
 	HBITMAP hBitmap, hOldBitmap;
 	HDC hdcMem;
@@ -369,7 +369,7 @@ void Zoomy::draw_pixels(HDC hdc, int xoff, int yoff, int width, int height, int 
 	DeleteObject(hBitmap);
 }
 
-void Zoomy::keydown(int key)
+void TrickRoom::keydown(int key)
 {
 	switch (key)
 	{
@@ -380,7 +380,7 @@ void Zoomy::keydown(int key)
 }
 
 // Note: lpVHdr has YUY2 data not RGB
-LRESULT Zoomy::frameCallback(HWND hWnd, LPVIDEOHDR lpVHdr)
+LRESULT TrickRoom::frameCallback(HWND hWnd, LPVIDEOHDR lpVHdr)
 {
 	if (connect_sframe_sock != SOCKET_ERROR && enable_video)
 	{
@@ -405,7 +405,7 @@ LRESULT Zoomy::frameCallback(HWND hWnd, LPVIDEOHDR lpVHdr)
 }
 
 // Could probably throw this into WMU_CAPTURE and it would be fine without an extra thread, but I like how compartmentalized it is
-DWORD WINAPI Zoomy::VoiceThread(LPVOID lpParam)
+DWORD WINAPI TrickRoom::VoiceThread(LPVOID lpParam)
 {
 	static Audio audio;
 	static Voice voice;
@@ -418,13 +418,13 @@ DWORD WINAPI Zoomy::VoiceThread(LPVOID lpParam)
 
 	char path[MAX_PATH] = { 0 };
 	GetCurrentDirectory(MAX_PATH, path);
-	lstrcat(path, TEXT("\\zoomy.ini"));
+	lstrcat(path, TEXT("\\trickroom.ini"));
 
 
-	udp_port_connect = GetPrivateProfileInt(TEXT("zoomy"), TEXT("udp_connect"), 65533, path);
-	udp_port_listen = GetPrivateProfileInt(TEXT("zoomy"), TEXT("udp_listen"), 65532, path);
-	GetPrivateProfileString(TEXT("zoomy"), TEXT("ip"), "127.0.0.1", connect_ip, MAX_PATH, path);
-	GetPrivateProfileString(TEXT("zoomy"), TEXT("localip"), "127.0.0.1", listen_ip, MAX_PATH, path);
+	udp_port_connect = GetPrivateProfileInt(TEXT("trickroom"), TEXT("udp_connect"), 65533, path);
+	udp_port_listen = GetPrivateProfileInt(TEXT("trickroom"), TEXT("udp_listen"), 65532, path);
+	GetPrivateProfileString(TEXT("trickroom"), TEXT("ip"), "127.0.0.1", connect_ip, MAX_PATH, path);
+	GetPrivateProfileString(TEXT("trickroom"), TEXT("localip"), "127.0.0.1", listen_ip, MAX_PATH, path);
 
 
 	socket_connect(udp_connect, connect_ip, udp_port_connect);
@@ -459,7 +459,7 @@ DWORD WINAPI Zoomy::VoiceThread(LPVOID lpParam)
 }
 
 
-int Zoomy::listen_socket(int &sock, unsigned short port)
+int TrickRoom::listen_socket(int &sock, unsigned short port)
 {
 	struct sockaddr_in	servaddr;
 
@@ -476,7 +476,7 @@ int Zoomy::listen_socket(int &sock, unsigned short port)
 	return 0;
 }
 
-int Zoomy::set_sock_options(int sock)
+int TrickRoom::set_sock_options(int sock)
 {
 	unsigned long nonblock = 1;
 	ioctlsocket(sock, FIONBIO, &nonblock);
@@ -515,7 +515,7 @@ int Zoomy::set_sock_options(int sock)
 }
 
 
-int Zoomy::connect_socket(char *ip_addr, unsigned short port, int &sock)
+int TrickRoom::connect_socket(char *ip_addr, unsigned short port, int &sock)
 {
 	struct sockaddr_in	servaddr;
 	int ret;
@@ -628,7 +628,7 @@ int Zoomy::connect_socket(char *ip_addr, unsigned short port, int &sock)
 	return -1;
 }
 
-void Zoomy::handle_listen(int &sock, int &csock, char *ipstr)
+void TrickRoom::handle_listen(int &sock, int &csock, char *ipstr)
 {
 	struct sockaddr_in csockaddr;
 	int addrlen = sizeof(sockaddr);
@@ -668,7 +668,7 @@ void Zoomy::handle_listen(int &sock, int &csock, char *ipstr)
 }
 
 
-void Zoomy::read_socket(int &csock, char *buffer, int &size)
+void TrickRoom::read_socket(int &csock, char *buffer, int &size)
 {
 	if (csock == -1)
 		return;
@@ -719,7 +719,7 @@ void Zoomy::read_socket(int &csock, char *buffer, int &size)
 	}
 }
 
-void Zoomy::yuy2_to_rgb(unsigned char *yuvData, COLORREF *data)
+void TrickRoom::yuy2_to_rgb(unsigned char *yuvData, COLORREF *data)
 {
 	int j = 0;
 

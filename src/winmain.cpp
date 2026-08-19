@@ -13,7 +13,7 @@
 #include "queue.h"
 #include "types.h"
 
-#include "zoomy.h"
+#include "trickroom.h"
 #include "sock.h"
 
 // defines
@@ -33,7 +33,7 @@ void getBitmapFromWindow(HWND hwnd, int startx, int starty, int width, int heigh
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	static char szAppName[] = TEXT("zoomy");
+	static char szAppName[] = TEXT("trickroom");
 	HWND hwnd;
 	MSG msg;
 	WNDCLASS wndclass;
@@ -92,7 +92,7 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	static HWND		camhwnd = NULL;
 	void *voice_data = NULL;
 	HANDLE hThread;
-	static Zoomy zoomy;
+	static TrickRoom trickroom;
 
 	switch (message)
 	{
@@ -101,8 +101,8 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		SetTimer(hwnd, 0, 500, NULL);
 
 		WSAStartup(MAKEWORD(2, 0), &WSAData);
-		zoomy.init(hwnd, NULL);
-		hThread = CreateThread(NULL, 0, Zoomy::VoiceThread, &voice_data, 0, NULL);
+		trickroom.init(hwnd, NULL);
+		hThread = CreateThread(NULL, 0, TrickRoom::VoiceThread, &voice_data, 0, NULL);
 		break;
 	}
 	case WM_KEYDOWN:
@@ -112,21 +112,21 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			RedirectIOToConsole(true);
 			break;
 		}
-		zoomy.keydown(wParam);
+		trickroom.keydown(wParam);
 		break;
 	case WMU_CAPTURE:
 	{
-		zoomy.capture();
+		trickroom.capture();
 		break;
 	}
 	case WM_TIMER:
 	{
-		zoomy.step();
+		trickroom.step();
 		break;
 	}
 	case WM_SIZE:
 	{
-		zoomy.resize(LOWORD(lParam), HIWORD(lParam));
+		trickroom.resize(LOWORD(lParam), HIWORD(lParam));
 		break;
 	}
 
@@ -137,14 +137,14 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		hdc = BeginPaint(hwnd, &ps);
 
-		zoomy.paint(hdc);
+		trickroom.paint(hdc);
 
 		EndPaint(hwnd, &ps);
 		return 0;
 	}
 	case WM_DESTROY:
 	{
-		if (Zoomy::enable_video)
+		if (TrickRoom::enable_video)
 		{
 			SendMessage(camhwnd, WM_CAP_DRIVER_DISCONNECT, 0, 0);
 		}

@@ -1,5 +1,5 @@
 # ============================================================================
-# zoomy — chat-room client application (Windows)
+# trickroom — chat-room client application (Windows)
 #   Builds the game layer against the static libAE_* archives from audio_engine
 #   and the third-party submodules at the repository root (openal-soft, opus).
 #
@@ -17,11 +17,11 @@
 #
 #   Build:              cmake -S src -B src/build -G "MinGW Makefiles"
 #                       cmake --build src/build -j
-#   Output:             bin/zoomy.exe
+#   Output:             bin/trickroom.exe
 # ============================================================================
 cmake_minimum_required(VERSION 3.10.0)
 
-project(ZoomyProject)
+project(TrickRoomProject)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -38,30 +38,30 @@ set(CMAKE_PREFIX_PATH
 )
 find_package(absl REQUIRED)
 
-add_executable(zoomy WIN32
+add_executable(trickroom WIN32
     audio.cpp
     voice.cpp
     winmain.cpp
     misc.cpp
     queue.cpp
     sock.cpp
-    zoomy.cpp
+    trickroom.cpp
 )
 
-target_compile_definitions(zoomy PRIVATE
+target_compile_definitions(trickroom PRIVATE
     AUDIO_ENGINE_STATIC
     _CRT_SECURE_NO_WARNINGS
     AL_LIBTYPE_STATIC    # openal-soft static build: no dllimport on AL symbols
 )
 
-target_include_directories(zoomy PRIVATE
+target_include_directories(trickroom PRIVATE
     "${CMAKE_SOURCE_DIR}"
     "${AUDIO_ENGINE_ROOT}"
     "${THIRD_PARTY_ROOT}/openal-soft/include"
     "${THIRD_PARTY_ROOT}/opus/include"
 )
 
-target_link_libraries(zoomy PRIVATE
+target_link_libraries(trickroom PRIVATE
     # Audio pipeline libs (AEC → NS → AGC2 → SRC)
     "${AUDIO_ENGINE_ROOT}/lib/libAE_AEC.a"
     "${AUDIO_ENGINE_ROOT}/lib/libAE_NS.a"
@@ -77,10 +77,10 @@ target_link_libraries(zoomy PRIVATE
 
 # Standalone exe: no libgcc/libstdc++ DLLs needed at runtime
 if(MINGW)
-    target_link_options(zoomy PRIVATE -static-libgcc -static-libstdc++)
+    target_link_options(trickroom PRIVATE -static-libgcc -static-libstdc++)
 endif()
 
 # Same location as the prebuilt game binaries
-set_target_properties(zoomy PROPERTIES
+set_target_properties(trickroom PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${REPO_ROOT}/bin"
 )
