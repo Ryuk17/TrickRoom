@@ -1,6 +1,8 @@
 #ifndef RTC_BASE_SANITIZER_H_
 #define RTC_BASE_SANITIZER_H_
 
+#include <stddef.h>  // For size_t / ptrdiff_t
+
 // rtc_base/sanitizer.h — stub
 // Original defines RTC_NO_SANITIZE macros and MSan helper functions.
 // These are hints for the compiler; no-ops in this pure build.
