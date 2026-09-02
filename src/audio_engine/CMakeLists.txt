@@ -14,19 +14,43 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+enable_testing()
+
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
-# Third-party dependencies (submodules) live at the repository root
+# Third-party dependencies live at the repository root (git submodule layout).
+# The top-level super build fetches them via FetchContent and hands the source
+# dirs / absl targets down; these fallbacks keep standalone builds working.
 set(THIRD_PARTY_ROOT "${PROJECT_SOURCE_DIR}/../../third_party")
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_PREFIX_PATH
-    "${THIRD_PARTY_ROOT}/abseil-cpp/install"
-    ${CMAKE_PREFIX_PATH}
-)
+if(NOT DEFINED NEON_FFT_SOURCE_DIR)
+    set(NEON_FFT_SOURCE_DIR "${THIRD_PARTY_ROOT}/neon-fft")
+endif()
+if(NOT DEFINED PFFFT_SOURCE_DIR)
+    set(PFFFT_SOURCE_DIR "${THIRD_PARTY_ROOT}/pffft")
+endif()
 
-find_package(absl REQUIRED)
+# Vendored sources include "third_party/pffft/pffft.h" (WebRTC layout); bridge
+# that path to wherever PFFFT_SOURCE_DIR actually lives (submodule or FetchContent).
+set(PFFFT_COMPAT_DIR "${CMAKE_CURRENT_BINARY_DIR}/pffft_compat/third_party/pffft")
+file(MAKE_DIRECTORY "${PFFFT_COMPAT_DIR}/src")
+file(WRITE "${PFFFT_COMPAT_DIR}/pffft.h"
+     "#include \"${PFFFT_SOURCE_DIR}/pffft.h\"\n")
+file(WRITE "${PFFFT_COMPAT_DIR}/src/pffft.h"
+     "#include \"${PFFFT_SOURCE_DIR}/pffft.h\"\n")
+
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+# absl: the top-level super build provides absl::strings via FetchContent;
+# fall back to find_package for standalone builds.
+if(NOT TARGET absl::strings)
+    set(CMAKE_PREFIX_PATH
+        "${THIRD_PARTY_ROOT}/abseil-cpp/install"
+        ${CMAKE_PREFIX_PATH}
+    )
+    find_package(absl REQUIRED)
+endif()
 
 # Disable WebRTC metrics (no-op stubs)
 add_definitions(-DRTC_DISABLE_METRICS)
@@ -75,7 +99,9 @@ macro(add_ae_test TEST_NAME TEST_SRC LIB_TARGET)
         )
     endif()
 
-    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+    # Tests read data/... relative to the audio_engine source dir
+    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME}
+             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 endmacro()
 
 # ============================================================================
@@ -107,19 +133,22 @@ set(SIGNAL_PROCESSING_RESAMPLE
 )
 
 set(NE10_FFT_SRC
-    "${THIRD_PARTY_ROOT}/neon-fft/src/NE10_fft.c"
-    "${THIRD_PARTY_ROOT}/neon-fft/src/NE10_fft_float32.c"
-    "${THIRD_PARTY_ROOT}/neon-fft/src/NE10_fft_generic_float32.c"
-    "${THIRD_PARTY_ROOT}/neon-fft/src/NE10_rfft_float32.c"
+    "${NEON_FFT_SOURCE_DIR}/src/NE10_fft.c"
+    "${NEON_FFT_SOURCE_DIR}/src/NE10_fft_float32.c"
+    "${NEON_FFT_SOURCE_DIR}/src/NE10_fft_generic_float32.c"
+    "${NEON_FFT_SOURCE_DIR}/src/NE10_rfft_float32.c"
 )
 
 set(NE10_FFT_INCLUDE
-    "${THIRD_PARTY_ROOT}/neon-fft/include/"
+    "${NEON_FFT_SOURCE_DIR}/include/"
 )
 
 # ---- Resampler sources (used by modules that need AudioBuffer) ----
 file(GLOB RESAMPLER_SRC "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/*.cc")
 list(FILTER RESAMPLER_SRC EXCLUDE REGEX ".*_neon\\.cc$")
+
+# sinc_resampler needs AlignedMalloc/AlignedFree (utils/aligned_malloc.cc)
+set(RESAMPLER_DEPS "${PROJECT_SOURCE_DIR}/utils/aligned_malloc.cc")
 
 # ---- Common include directories for libraries ----
 set(LIB_COMMON_INCLUDES
@@ -167,7 +196,7 @@ if(BUILD_AE_VAD)
 
     file(GLOB VAD_SRC "${PROJECT_SOURCE_DIR}/audio_processing/voice_activity_detection/*.cc")
     file(GLOB ISAC_VAD_SRC "${PROJECT_SOURCE_DIR}/audio_processing/voice_activity_detection/isac/main/source/*.c")
-    target_sources(AE_VAD PRIVATE ${VAD_SRC} ${ISAC_VAD_SRC} ${RESAMPLER_SRC})
+    target_sources(AE_VAD PRIVATE ${VAD_SRC} ${ISAC_VAD_SRC} ${RESAMPLER_SRC} ${RESAMPLER_DEPS})
 
     set_source_files_properties(
         "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/sinc_resampler_avx2.cc"
@@ -198,7 +227,7 @@ if(BUILD_AE_SRC)
         "${PROJECT_SOURCE_DIR}/signal_processing/splitting_filter.c"
     )
 
-    target_sources(AE_SRC PRIVATE ${RESAMPLER_SRC})
+    target_sources(AE_SRC PRIVATE ${RESAMPLER_SRC} ${RESAMPLER_DEPS})
 
     set_source_files_properties(
         "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/sinc_resampler_avx2.cc"
@@ -231,7 +260,7 @@ if(BUILD_AE_NS)
     )
 
     file(GLOB NS_SRC "${PROJECT_SOURCE_DIR}/audio_processing/noise_suppressor/*.cc")
-    target_sources(AE_NS PRIVATE ${NS_SRC} ${RESAMPLER_SRC})
+    target_sources(AE_NS PRIVATE ${NS_SRC} ${RESAMPLER_SRC} ${RESAMPLER_DEPS})
 
     target_include_directories(AE_NS PUBLIC
         ${LIB_COMMON_INCLUDES}
@@ -281,13 +310,13 @@ if(BUILD_AE_AGC2)
         ${UTILS_AUDIO_BUFFER_AND_SPLITTING}
         "${PROJECT_SOURCE_DIR}/model_weights/rnnoise/src/rnn_vad_weights.cc"
         "${PROJECT_SOURCE_DIR}/signal_processing/pffft_wrapper.cc"
-        "${THIRD_PARTY_ROOT}/pffft/pffft.c"
-        "${THIRD_PARTY_ROOT}/pffft/fftpack.c"
+        "${PFFFT_SOURCE_DIR}/pffft.c"
+        "${PFFFT_SOURCE_DIR}/fftpack.c"
     )
 
     file(GLOB AGC2_CORE "${PROJECT_SOURCE_DIR}/audio_processing/automatic_gain_control2/*.cc")
     file(GLOB RNN_VAD_SRC "${PROJECT_SOURCE_DIR}/audio_processing/automatic_gain_control2/rnn_vad/*.cc")
-    target_sources(AE_AGC2 PRIVATE ${AGC2_CORE} ${RNN_VAD_SRC} ${RESAMPLER_SRC})
+    target_sources(AE_AGC2 PRIVATE ${AGC2_CORE} ${RNN_VAD_SRC} ${RESAMPLER_SRC} ${RESAMPLER_DEPS})
 
     set_source_files_properties(
         "${PROJECT_SOURCE_DIR}/audio_processing/automatic_gain_control2/rnn_vad/vector_math_avx2.cc"
@@ -298,7 +327,8 @@ if(BUILD_AE_AGC2)
     target_include_directories(AE_AGC2 PUBLIC
         ${LIB_COMMON_INCLUDES}
         "${PROJECT_SOURCE_DIR}/audio_processing/sample_rate_conversion/"
-        "${THIRD_PARTY_ROOT}/pffft/"
+        "${PFFFT_SOURCE_DIR}/"
+        "${CMAKE_CURRENT_BINARY_DIR}/pffft_compat"
     )
     target_link_libraries(AE_AGC2 PUBLIC absl::strings)
     target_compile_definitions(AE_AGC2 PRIVATE AUDIO_ENGINE_EXPORTS)
@@ -361,7 +391,7 @@ if(BUILD_AE_AEC)
     file(GLOB AEC3_SRC "${PROJECT_SOURCE_DIR}/audio_processing/acoustic_echo_cancellation3/*.cc")
     list(FILTER AEC3_SRC EXCLUDE REGEX ".*neural_feature_extractor\\.cc$")
     list(FILTER AEC3_SRC EXCLUDE REGEX ".*neural_residual_echo_estimator_impl\\.cc$")
-    target_sources(AE_AEC PRIVATE ${AEC3_SRC} ${RESAMPLER_SRC})
+    target_sources(AE_AEC PRIVATE ${AEC3_SRC} ${RESAMPLER_SRC} ${RESAMPLER_DEPS})
 
     set_source_files_properties(
         "${PROJECT_SOURCE_DIR}/audio_processing/acoustic_echo_cancellation3/adaptive_fir_filter_avx2.cc"
