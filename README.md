@@ -12,25 +12,77 @@
   <img src="assets/Trick_Room_IX.png" alt="TrickRoom logo" width="360">
 </p>
 
-TrickRoom is a real-time voice chat room. Its voice pipeline is powered by
-[soundproof](https://github.com/Ryuk17/soundproof) — a set of audio speech-enhancement
-algorithms wrapped into a unified C interface, fetched at configure time via CMake
-`FetchContent` (no vendored copy in this repository).
+TrickRoom is a real-time voice chat room for Windows. One binary plays both roles —
+it listens and dials as configured — carrying voice over UDP with TCP for signalling,
+OpenAL for capture/playback and Opus for the codec. Every captured frame is enhanced
+before it is encoded: the client runs a **configurable speech-enhancement chain**
+(echo cancellation → noise suppression → automatic gain control → resampling) assembled
+from the independent `libAE_*` algorithm libraries of
+[soundproof](https://github.com/Ryuk17/soundproof), pulled in at configure time via
+CMake `FetchContent` (no vendored copy in this repository).
 
 > **Note:** Some features are still under development and the public interfaces
 > may evolve. Contributions and pull requests are welcome!
 
 > [中文文档](README_zh.md)
 
-## Audio Engine Overview
+## Real-time Voice Pipeline
+
+### Data path
+
+```
+ MIC — OpenAL capture, 48 kHz mono, 10 ms = 480 samples
+   │
+   ▼
+ AEC ──▶ NS ──▶ AGC2 ──▶ SRC 48k→16k ──▶ Opus encode ──▶ UDP  (uplink)
+   ▲
+   │ far-end reference, 48 kHz, one frame per mic frame
+   │
+ SRC 16k→48k ◀── Opus decode ◀── UDP  (downlink)
+   │
+   ▼
+ Playback — OpenAL
+```
+
+- Capture and the first four stages run at 48 kHz with 10 ms frames (480 samples);
+  the uplink is 16 kHz mono Opus, i.e. 160 samples per 10 ms frame.
+- The remote (far-end) signal is decoded at 16 kHz, upsampled to 48 kHz and queued in
+  a 240 ms ring buffer. Each near-end frame is paired with the matching far-end frame,
+  which is what makes the echo canceller work — the reference must stay in lockstep
+  with capture.
+- Capture, encode and playback live in [src/voice.cpp](src/voice.cpp); the pipeline
+  itself is [src/audio.cpp](src/audio.cpp) (`Audio::process_pipeline`).
+
+### Configuring the chain
+
+The chain is **not hard-wired into the algorithm library** — it is composed by the
+application out of independent libraries, so both the stages and their parameters are
+configurable:
+
+- **Pick the stages** — enable/disable any module at configure time with
+  `-DBUILD_AE_<XXX>=OFF`, and link only the ones the app actually uses
+  (`target_link_libraries(trickroom ...)` in [CMakeLists.txt](CMakeLists.txt)).
+  Re-ordering or replacing a stage means editing `Audio::init_pipeline()` /
+  `Audio::process_pipeline()`; nothing else in the room logic is algorithm-aware.
+- **Tune at start-up** — each library takes its own init config (sample rate, channel
+  count, AGC target gain, NS suppression level, …); TrickRoom currently sets these in
+  `Audio::init_pipeline()` ([src/audio.cpp:406](src/audio.cpp#L406)) for
+  AEC → NS → AGC2 → SRC.
+- **Tune at runtime** — the modules with tunable parameters (AEC, AECM, AGC, AGC2, BF,
+  NS, SRC, VAD) expose `SetParam` (incremental: only the fields you pass are overwritten)
+  and `ResetParam` (restore defaults, then apply). Every module has `Reset` to rebuild
+  internal state while keeping the configuration.
+- **Inspect every stage** — uncomment `#define AUDIO_DEBUG_DUMP 1` in
+  [src/audio.h:29](src/audio.h#L29) to dump each stage's input and the final output as
+  WAVs under `dump/`.
+
+### Algorithms available
 
 The [soundproof](https://github.com/Ryuk17/soundproof) repository wraps audio-processing
 algorithms as self-contained C libraries named `libAE_xxx` (`.a` / `.so` / `.dll`), where `xxx` is an
 uppercase abbreviation of the algorithm. Every library exposes the same design pattern:
 an opaque handle, an init config, frame-based `Process` calls, and unified error codes —
-so the whole pipeline (e.g. AEC → NS → AGC2 → SRC) can be chained from plain C.
-
-### Available Libraries
+so any subset of them can be chained from plain C.
 
 | Library      | Algorithm                        | Description                                          |
 |--------------|----------------------------------|------------------------------------------------------|
@@ -51,25 +103,58 @@ so the whole pipeline (e.g. AEC → NS → AGC2 → SRC) can be chained from pla
 
 ```
 TrickRoom/
-├── README.md                       # English documentation (this file)
-├── README_zh.md                    # Chinese documentation
-├── LICENSE                         # Apache License 2.0
-├── CMakeLists.txt                  # Super build: fetches soundproof + openal/opus, builds trickroom
-├── assets/                         # Icons and static resources
-├── bin/                            # Prebuilt binaries and configuration files
+├── README.md / README_zh.md      # Documentation
+├── LICENSE                       # Apache License 2.0
+├── CMakeLists.txt                # Super build: fetches soundproof + openal/opus, builds trickroom
+├── assets/                       # Icons and static resources
+├── bin/                          # Prebuilt binary + trickroom.ini
 └── src/
-    └── *.cpp / *.h                 # Chat room application (client/server)
+    ├── audio.cpp / audio.h       # OpenAL capture/playback + the AEC→NS→AGC2→SRC pipeline
+    ├── voice.cpp / voice.h       # Opus encode/decode, voice packet framing, UDP send/recv
+    ├── trickroom.cpp / .h        # Room logic: listen/connect, peers, message routing
+    ├── sock.cpp / queue.cpp      # Sockets and ring buffers
+    ├── misc.cpp                  # Helpers
+    └── winmain.cpp               # Win32 entry point
 ```
 
 The audio-engine libraries (`libAE_xxx`) live in the separate
 [soundproof](https://github.com/Ryuk17/soundproof) repository and are pulled in
 by CMake `FetchContent` at configure time.
 
-## Building the Audio Engine
+## Building and Running
 
-The engine libraries are built as part of the TrickRoom super build:
+### The chat client
+
+Windows + MinGW. The super build fetches soundproof, OpenAL Soft and Opus, then
+builds `bin/trickroom.exe`:
+
+```bash
+cmake -S . -B build -G "MinGW Makefiles" -DBUILD_TRICKROOM=ON
+cmake --build build -j
+```
+
+`bin/trickroom.ini` selects the topology — the same binary listens and connects:
+
+```ini
+[trickroom]
+listen=65534        ; TCP port this instance accepts on
+connect=65535       ; TCP port it dials
+localip=192.168.1.165   ; local address to bind
+ip=192.168.1.166        ; peer address to dial
+udp_listen=65532    ; voice (UDP) port it binds
+udp_connect=65533   ; voice (UDP) port it dials to
+capture=1           ; enable microphone capture
+```
+
+### The algorithm libraries
+
 `-DBUILD_AUDIO_ENGINE=ON` (default) fetches soundproof from git
-(`GIT_TAG master`) and builds all `libAE_xxx` targets.
+(`GIT_TAG master`) and builds all `libAE_xxx` targets as part of the same build.
+All libraries are enabled by default; disable individual ones with
+`-DBUILD_AE_<XXX>=OFF`, e.g. `-DBUILD_AE_DR=OFF` (available: `BUILD_AE_VAD`,
+`BUILD_AE_SRC`, `BUILD_AE_NS`, `BUILD_AE_AGC`, `BUILD_AE_AGC2`, `BUILD_AE_AECM`,
+`BUILD_AE_AEC`, `BUILD_AE_BF`, `BUILD_AE_HS`, `BUILD_AE_IE`, `BUILD_AE_TS`,
+`BUILD_AE_DR`).
 
 To use a local soundproof checkout instead of the git fetch (recommended while
 developing the engine — local edits take effect on the next build):
@@ -84,59 +169,10 @@ soundproof README. Soundproof fetches its own dependencies (abseil-cpp,
 neon-fft, pffft, eigen) as URL tarballs with SHA256 checksums; it requires
 CMake ≥ 3.16 and a C++20 compiler.
 
-All libraries are enabled by default. Disable individual ones with
-`-DBUILD_AE_<XXX>=OFF`, e.g. `-DBUILD_AE_DR=OFF`. Available options:
-`BUILD_AE_VAD`, `BUILD_AE_SRC`, `BUILD_AE_NS`, `BUILD_AE_AGC`, `BUILD_AE_AGC2`,
-`BUILD_AE_AECM`, `BUILD_AE_AEC`, `BUILD_AE_BF`, `BUILD_AE_HS`, `BUILD_AE_IE`,
-`BUILD_AE_TS`, `BUILD_AE_DR`.
-
 Outputs (in the soundproof source/build tree):
 
 - Libraries: `lib/libAE_*.a`
 - Test executables: `bin/test_ae_*.exe`
-
-## Unified C Interface
-
-All libraries follow one pattern (see `interface/audio_engine_def.h` in the
-soundproof repository for shared status codes and `audio_engine_vad.h` as the
-reference example):
-
-```c
-typedef void* VadHandle;
-
-typedef struct {
-    int sample_rate;   /* e.g. 16000                          */
-    int frame_len;     /* samples per frame, 10 ms constraint */
-} VadInitConfig;
-
-typedef struct {
-    float threshold;   /* voice probability threshold, (0.0, 1.0] */
-} VadRtConfig;
-
-VadHandle AudioEngine_Vad_Create(void);
-int AudioEngine_Vad_Init(VadHandle h, const VadInitConfig* cfg);
-int AudioEngine_Vad_SetParam(VadHandle h, const VadRtConfig* cfg);    /* incremental: overwrite passed fields */
-int AudioEngine_Vad_ResetParam(VadHandle h, const VadRtConfig* cfg);  /* full: restore defaults, then apply */
-int AudioEngine_Vad_Process(VadHandle h, const short* audio_in, int samples, int* vad_flag);
-int AudioEngine_Vad_Deinit(VadHandle h);
-int AudioEngine_Vad_Reset(VadHandle h);   /* rebuild internal state, keep configuration */
-int AudioEngine_Vad_Destroy(VadHandle h);
-```
-
-Conventions shared by every module:
-
-- Opaque handle per instance; `Create` / `Init` / `Process` / `Deinit` / `Destroy`
-  lifecycle plus `Reset` (recreates the internal state, keeps the configuration).
-- Optional runtime config for tunable algorithms: `SetParam` updates incrementally,
-  `ResetParam` restores factory defaults first and then applies the new values.
-- Unified status codes: `AUDIO_ENGINE_SUCCESS`, `ERR_INVALID_HANDLE`, `ERR_NULL_POINTER`,
-  `ERR_NOT_INITIALIZED`, `ERR_INVALID_PARAM`, `ERR_INIT_FAILED`, `ERR_PROCESS_FAILED`.
-- 16-bit PCM in / 16-bit PCM out; frame length per algorithm
-  (e.g. VAD/NS/AEC use 10 ms frames, DR uses 64 samples at 16 kHz).
-- Every API is instrumented with debug/warn/error logging.
-- FFT-based modules use the NE10 NEON FFT for ARM-friendly performance.
-  `libAE_DR` is the deliberate exception: its EKF requires double-precision FFT
-  (Eigen), see `core/dereverberation/real_fft.h` in the soundproof repository.
 
 ## Testing
 

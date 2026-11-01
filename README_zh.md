@@ -12,22 +12,65 @@
   <img src="assets/Trick_Room_IX.png" alt="TrickRoom logo" width="360">
 </p>
 
-TrickRoom 是一个实时语音聊天室。其语音处理管线由
-[soundproof](https://github.com/Ryuk17/soundproof) 驱动 —— 一组封装为统一 C 接口的语音增强算法库，
-在 configure 阶段通过 CMake `FetchContent` 拉取（本仓库不再内置副本）。
+TrickRoom 是一个 Windows 实时语音聊天室。同一个可执行文件按配置既监听又拨号，
+语音走 UDP、信令走 TCP，采集/播放用 OpenAL，编解码用 Opus。每一帧采集数据在编码前
+都要经过**可配置的语音增强链路**（回声消除 → 降噪 → 自动增益 → 重采样），
+链路由 [soundproof](https://github.com/Ryuk17/soundproof) 提供的独立 `libAE_*` 算法库
+按需组合而成，在 configure 阶段通过 CMake `FetchContent` 拉取（本仓库不再内置副本）。
 
 > **说明：** 部分功能仍在开发中，公开接口可能会调整。欢迎提交 PR 与贡献！
 
 > [English Documentation](README.md)
 
-## 音频引擎简介
+## 实时语音链路
+
+### 数据流
+
+```
+ MIC —— OpenAL 采集，48 kHz 单声道，10 ms = 480 样本
+   │
+   ▼
+ AEC ──▶ NS ──▶ AGC2 ──▶ SRC 48k→16k ──▶ Opus 编码 ──▶ UDP  （上行）
+   ▲
+   │ 远端参考信号，48 kHz，每个麦克风帧对应一帧
+   │
+ SRC 16k→48k ◀── Opus 解码 ◀── UDP  （下行）
+   │
+   ▼
+ 播放 —— OpenAL
+```
+
+- 采集与前四级均按 48 kHz / 10 ms 帧（480 样本）处理；上行是 16 kHz 单声道 Opus，
+  即每 10 ms 帧 160 样本。
+- 远端（far-end）信号以 16 kHz 解码、上采样到 48 kHz 后进入 240 ms 环形缓冲；
+  每个近端帧与对应的远端帧配对送入 AEC 作参考——参考信号必须与采集严格同步，
+  回声消除才有效。
+- 采集、编码与播放位于 [src/voice.cpp](src/voice.cpp)；链路本身在
+  [src/audio.cpp](src/audio.cpp)（`Audio::process_pipeline`）。
+
+### 链路可配置
+
+链路**不固化在算法库内部**，而是由应用用一个个独立库拼出来，因此链路组成与参数都可配置：
+
+- **选算法** —— configure 阶段用 `-DBUILD_AE_<XXX>=OFF` 开关任意模块，并且只链接应用
+  真正用到的目标（[CMakeLists.txt](CMakeLists.txt) 中的 `target_link_libraries(trickroom ...)`）。
+  增删或调换一级算法，只需改 `Audio::init_pipeline()` / `Audio::process_pipeline()`；
+  聊天室其余逻辑不感知具体算法。
+- **启动时调参** —— 每个库有自己的初始化配置（采样率、声道数、AGC 目标增益、
+  降噪强度等）；TrickRoom 当前在 `Audio::init_pipeline()`
+  （[src/audio.cpp:406](src/audio.cpp#L406)）中为 AEC → NS → AGC2 → SRC 设值。
+- **运行时调参** —— 带可调参数的模块（AEC、AECM、AGC、AGC2、BF、NS、SRC、VAD）提供
+  `SetParam`（增量：只覆盖传入字段）与 `ResetParam`（先回默认值再应用）；所有模块都有
+  `Reset`，在保留配置的前提下重建内部状态。
+- **逐级排查** —— 打开 [src/audio.h:29](src/audio.h#L29) 的 `#define AUDIO_DEBUG_DUMP 1`，
+  即可把每一级的输入和最终输出 dump 成 WAV 到 `dump/`。
+
+### 已封装的库
 
 [soundproof](https://github.com/Ryuk17/soundproof) 将音频处理算法封装为独立的 C 库，
 命名为 `libAE_xxx`（`.a` / `.so` / `.dll`），其中 `xxx` 为算法的大写缩写。
 所有库遵循同一设计模式：不透明句柄 + 初始化配置 + 按帧 `Process` 处理 + 统一错误码，
-因此整条处理链（如 AEC → NS → AGC2 → SRC）可以直接用纯 C 串联。
-
-### 已封装的库
+因此任意子集都可以直接用纯 C 串联。
 
 | 库名         | 算法                     | 说明                                       |
 |--------------|--------------------------|--------------------------------------------|
@@ -48,24 +91,57 @@ TrickRoom 是一个实时语音聊天室。其语音处理管线由
 
 ```
 TrickRoom/
-├── README.md                       # 英文文档
-├── README_zh.md                    # 中文文档（本文件）
-├── LICENSE                         # Apache License 2.0
-├── CMakeLists.txt                  # super build：拉取 soundproof + openal/opus，编译 trickroom
-├── assets/                         # 图标等静态资源
-├── bin/                            # 预编译程序及配置文件
+├── README.md / README_zh.md      # 文档
+├── LICENSE                       # Apache License 2.0
+├── CMakeLists.txt                # super build：拉取 soundproof + openal/opus，编译 trickroom
+├── assets/                       # 图标等静态资源
+├── bin/                          # 预编译程序 + trickroom.ini
 └── src/
-    └── *.cpp / *.h                 # 聊天室应用（客户端/服务端）
+    ├── audio.cpp / audio.h       # OpenAL 采集/播放 + AEC→NS→AGC2→SRC 链路
+    ├── voice.cpp / voice.h       # Opus 编解码、语音包封装、UDP 收发
+    ├── trickroom.cpp / .h        # 房间逻辑：监听/拨号、对端、消息路由
+    ├── sock.cpp / queue.cpp      # socket 与环形缓冲区
+    ├── misc.cpp                  # 辅助函数
+    └── winmain.cpp               # Win32 入口
 ```
 
 音频算法库（`libAE_xxx`）位于独立的
 [soundproof](https://github.com/Ryuk17/soundproof) 仓库，由 CMake `FetchContent`
 在 configure 阶段拉取。
 
-## 编译音频引擎
+## 编译与运行
 
-引擎库随 TrickRoom super build 一起编译：`-DBUILD_AUDIO_ENGINE=ON`（默认）
-会从 git 拉取 soundproof（`GIT_TAG master`）并编译全部 `libAE_xxx` 目标。
+### 聊天室程序
+
+Windows + MinGW。super build 会拉取 soundproof、OpenAL Soft 与 Opus，
+然后编译出 `bin/trickroom.exe`：
+
+```bash
+cmake -S . -B build -G "MinGW Makefiles" -DBUILD_TRICKROOM=ON
+cmake --build build -j
+```
+
+`bin/trickroom.ini` 决定拓扑——同一个程序既监听也拨号：
+
+```ini
+[trickroom]
+listen=65534        ; 本端监听的 TCP 端口
+connect=65535       ; 本端拨号的 TCP 端口
+localip=192.168.1.165   ; 本端绑定地址
+ip=192.168.1.166        ; 对端地址
+udp_listen=65532    ; 本端绑定的语音（UDP）端口
+udp_connect=65533   ; 本端拨号的语音（UDP）端口
+capture=1           ; 打开麦克风采集
+```
+
+### 算法库
+
+`-DBUILD_AUDIO_ENGINE=ON`（默认）会从 git 拉取 soundproof（`GIT_TAG master`），
+并在同一次编译中构建全部 `libAE_xxx` 目标。默认全部库开启，可用
+`-DBUILD_AE_<XXX>=OFF` 单独关闭（如 `-DBUILD_AE_DR=OFF`；可用选项：
+`BUILD_AE_VAD`、`BUILD_AE_SRC`、`BUILD_AE_NS`、`BUILD_AE_AGC`、`BUILD_AE_AGC2`、
+`BUILD_AE_AECM`、`BUILD_AE_AEC`、`BUILD_AE_BF`、`BUILD_AE_HS`、`BUILD_AE_IE`、
+`BUILD_AE_TS`、`BUILD_AE_DR`）。
 
 开发引擎时可改用本地 soundproof 检出（推荐——本地改动下次编译即生效）：
 
@@ -78,57 +154,10 @@ cmake -S . -B build -G "MinGW Makefiles" -DBUILD_TRICKROOM=ON \
 依赖（abseil-cpp、neon-fft、pffft、eigen，均为 URL tarball + SHA256 校验），
 需要 CMake ≥ 3.16 与支持 C++20 的编译器。
 
-默认全部库开启，可用 `-DBUILD_AE_<XXX>=OFF` 单独关闭（如 `-DBUILD_AE_DR=OFF`）。
-可用选项：`BUILD_AE_VAD`、`BUILD_AE_SRC`、`BUILD_AE_NS`、`BUILD_AE_AGC`、`BUILD_AE_AGC2`、
-`BUILD_AE_AECM`、`BUILD_AE_AEC`、`BUILD_AE_BF`、`BUILD_AE_HS`、`BUILD_AE_IE`、
-`BUILD_AE_TS`、`BUILD_AE_DR`。
-
 产物（位于 soundproof 的源码/构建树内）：
 
 - 库文件：`lib/libAE_*.a`
 - 测试程序：`bin/test_ae_*.exe`
-
-## 统一 C 接口
-
-所有库遵循同一模式（公共错误码见 soundproof 仓库的 `interface/audio_engine_def.h`，
-参考范例见 `audio_engine_vad.h`）：
-
-```c
-typedef void* VadHandle;
-
-typedef struct {
-    int sample_rate;   /* 如 16000                       */
-    int frame_len;     /* 每帧样本数，10ms 帧长约束      */
-} VadInitConfig;
-
-typedef struct {
-    float threshold;   /* 语音概率阈值，(0.0, 1.0] */
-} VadRtConfig;
-
-VadHandle AudioEngine_Vad_Create(void);
-int AudioEngine_Vad_Init(VadHandle h, const VadInitConfig* cfg);
-int AudioEngine_Vad_SetParam(VadHandle h, const VadRtConfig* cfg);    /* 增量：只覆盖传入字段 */
-int AudioEngine_Vad_ResetParam(VadHandle h, const VadRtConfig* cfg);  /* 全量：先回默认再应用 */
-int AudioEngine_Vad_Process(VadHandle h, const short* audio_in, int samples, int* vad_flag);
-int AudioEngine_Vad_Deinit(VadHandle h);
-int AudioEngine_Vad_Reset(VadHandle h);   /* 重建内部状态，保留配置 */
-int AudioEngine_Vad_Destroy(VadHandle h);
-```
-
-各模块统一约定：
-
-- 每实例一个不透明句柄；生命周期为 `Create` / `Init` / `Process` / `Deinit` /
-  `Destroy`，另有 `Reset`（重建内部状态、保留配置）。
-- 带可调参数的算法提供运行时配置：`SetParam` 增量更新，`ResetParam` 先恢复出厂
-  默认再应用新值。
-- 统一错误码：`AUDIO_ENGINE_SUCCESS`、`ERR_INVALID_HANDLE`、`ERR_NULL_POINTER`、
-  `ERR_NOT_INITIALIZED`、`ERR_INVALID_PARAM`、`ERR_INIT_FAILED`、`ERR_PROCESS_FAILED`。
-- 16-bit PCM 输入 / 16-bit PCM 输出；帧长按算法而定
-  （如 VAD/NS/AEC 为 10ms 帧，DR 为 16 kHz 下 64 样本）。
-- 每个 API 预埋 debug/warn/error 日志。
-- FFT 类模块使用 NE10 NEON FFT，利于 ARM 平台性能。
-  `libAE_DR` 是经过评审的例外：其 EKF 要求双精度 FFT（Eigen），
-  详见 soundproof 仓库的 `core/dereverberation/real_fft.h`。
 
 ## 测试
 
