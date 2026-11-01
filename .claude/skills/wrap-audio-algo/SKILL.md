@@ -1,17 +1,20 @@
 ---
 name: wrap-audio-algo
-description: '将 src/audio_engine/audio_processing 中的 WebRTC 算法封装为统一 C 接口（libAE_xxx）。触发词：封装/接口/包装 xxx 算法、wrap algorithm、libAE_xxx。覆盖完整流程：接口设计 → 实现 → CMake 库 → 单元测试 → 与内部测试一致性验证 → git 提交。'
+description: '将 soundproof 仓库 soundproof/core 中的 WebRTC 算法封装为统一 C 接口（libAE_xxx）。触发词：封装/接口/包装 xxx 算法、wrap algorithm、libAE_xxx。覆盖完整流程：接口设计 → 实现 → CMake 库 → 单元测试 → 与内部测试一致性验证 → git 提交。'
 license: MIT
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
 ---
 
 # 封装音频算法为统一 C 接口
 
-把 `src/audio_engine/audio_processing` 中的某个算法（VAD、AEC、ANR、AGC...）封装成统一 C 接口库 `libAE_xxx`。**参考的已完成范例：VAD**（`interface/audio_engine_vad.h/.cpp`、`cmake/libAE_VAD.cmake`、`unitest/test_ae_vad.cc`）。
+把 soundproof 仓库 `soundproof/core` 中的某个算法（VAD、AEC、ANR、AGC...）封装成统一 C 接口库 `libAE_xxx`。**参考的已完成范例：VAD**（`soundproof/interface/audio_engine_vad.h/.cpp`、`CMakeLists.txt` 的 AE_VAD 段、`tests/test_ae_vad.cc`）。
 
-## 硬约束（CLAUDE.md 规定）
+> 算法库位于独立仓库 `F:/share/soundproof`（https://github.com/Ryuk17/soundproof），TrickRoom 通过 FetchContent 消费，不再内置副本。本 skill 的改动全部落在 soundproof 仓库内。
 
-- **只能修改 `src/audio_engine/interface/` 内代码**（错误码/日志宏在 `audio_engine_def.h`，属于 interface）
+## 硬约束（soundproof/CLAUDE.md 规定）
+
+- **只能修改 `soundproof/interface/` 内代码**（错误码/日志宏在 `audio_engine_def.h`，属于 interface）
+- ⚠️ soundproof 仓库当前尚无 CLAUDE.md，约束以本 skill 为准；如需迁移原 `src/audio_engine/CLAUDE.md`，须经用户批准（跨项目目录）
 - 跨平台：LINUX / WIN / 嵌入式
 - 接口代码**每个 API 预埋日志**（`LOG_DEBUG` 入口、`LOG_WARN`/`LOG_ERROR` 异常）
 - 库名 `libAE_xxx.a/so/dll`（如 `libAE_VAD`）
@@ -20,11 +23,11 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
 
 ## 一、分析阶段
 
-1. 读 [CLAUDE.md](../../../src/audio_engine/CLAUDE.md) 确认约束
-2. 读该算法的内部源码 `audio_processing/<algo>/` 头文件 + 调用测试 `unitest/internal/test_<algo>.cc`，搞清楚：
+1. 读 soundproof 的 `CLAUDE.md`（若存在）确认约束；否则以本 skill 的硬约束为准
+2. 读该算法的内部源码 `F:/share/soundproof/soundproof/core/<algo>/` 头文件 + 调用测试 `F:/share/soundproof/soundproof/core/tests/test_<algo>.cc`，搞清楚：
    - 算法类的构造/析构、核心处理函数签名（帧长约束、采样率）
    - 输入输出数据流向（内部测试怎么喂数据、取结果）
-3. 读现有 `interface/audio_engine_<algo>.h/.cpp` 草稿（若有）—— 通常有编译错误，逐项修复
+3. 读现有 `F:/share/soundproof/soundproof/interface/audio_engine_<algo>.h/.cpp` 草稿（若有）—— 通常有编译错误，逐项修复
 4. 参考已完成的 `audio_engine_vad.h`（正确范本）与 `audio_engine_aec.h`（未完成范本）的接口风格
 
 ## 二、接口设计模式（VAD 沉淀的结论）
@@ -72,24 +75,26 @@ AUDIO_ENGINE_API int AudioEngine_Xxx_Reset(XxxHandle handle);   /* 重建内部�
 
 ## 四、CMake 构建
 
-1. 新建 `cmake/libAE_XXX.cmake`：**直接复制 `cmake/test_<algo>.cmake` 的源文件列表**（算法依赖的 utils/signal_processing/third_party 源文件与内部测试完全相同），仅追加 `interface/audio_engine_xxx.cpp`
-2. include 目录加 `interface/`；`target_compile_definitions(... PRIVATE AUDIO_ENGINE_EXPORTS)`（库自身导出）
-3. 产物路径 `ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib` → `lib/libAE_XXX.a`
-4. `CMakeLists.txt` 加 `option(BUILD_LIB_AE_XXX ...)` + `include` + 调用
+soundproof 的构建集中在一个扁平文件 `F:/share/soundproof/CMakeLists.txt`（没有 `cmake/*.cmake` 分文件）。
 
-## 五、单元测试（unitest/test_ae_xxx.cc）
+1. 在 `CMakeLists.txt` 中新增 `option(BUILD_AE_XXX "..." ON)`，并在对应位置加 `add_library(AE_XXX STATIC ...)`：**源文件列表直接复制该算法内部测试所用的源文件**（算法依赖的 `utils/`、`dsp/` 源文件与内部测试完全相同），仅追加 `soundproof/interface/audio_engine_xxx.cpp`
+2. include 目录加公共组 `LIB_COMMON_INCLUDES`（已含 `interface/`）；`target_compile_definitions(... PRIVATE AUDIO_ENGINE_EXPORTS)`（库自身导出）；`target_link_libraries(AE_XXX PUBLIC absl::strings)`
+3. `set_target_properties(AE_XXX PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${AE_PROJECT_ROOT}/lib")` → `lib/libAE_XXX.a`
+4. 若新库被 TrickRoom 使用，另需在 TrickRoom 的 `CMakeLists.txt` 中加进 `target_link_libraries(trickroom ...)` 与 AE 目标存在性守卫
 
-三组测试（参考 `unitest/test_ae_vad.cc`）：
+## 五、单元测试（tests/test_ae_xxx.cc）
+
+三组测试（参考 `F:/share/soundproof/tests/test_ae_vad.cc`）：
 
 1. **正常流**：Create → Init → SetParam → 逐帧 Process（WAV 读写用 `utils/dr_wav.h` 的 `DrWavReader/DrWavWriter`）→ Deinit → Destroy
 2. **Reset**：处理几帧 → Reset → 继续 Process 正常
 3. **错误用例**：NULL handle / 未 Init 调 Process / 非法参数范围 → 断言返回对应错误码不崩溃
 
-配套 `cmake/test_ae_xxx.cmake`：`add_executable` 链接 `AE_XXX` 目标，**`target_compile_definitions PRIVATE AUDIO_ENGINE_STATIC`**。
+在 `CMakeLists.txt` 中加一行 `add_ae_test(test_ae_xxx "test_ae_xxx.cc" AE_XXX)`：该宏执行 `add_executable` + 链接 `AE_XXX` 目标 + **`target_compile_definitions PRIVATE AUDIO_ENGINE_STATIC`** + 注册 CTest。
 
 ## 六、一致性验证（与内部测试对比）
 
-1. 编译并运行内部测试 `test_<algo>`（生成 `data/xxx_out.wav` 基线）
+1. 编译并运行内部测试 `test_<algo>`（生成 `assets/xxx_out.wav` 基线）
 2. 编译运行接口测试 `test_ae_<algo>`（生成接口输出）
 3. 对比方法优先级：
    - **先确认长度**：两输出样本数、WAV 结构（RIFF size、data chunk）一致
@@ -103,7 +108,7 @@ AUDIO_ENGINE_API int AudioEngine_Xxx_Reset(XxxHandle handle);   /* 重建内部�
 
 ## 七、git 提交
 
-按 `/git-commit` 流程。若 `src/audio_engine` 尚未整体纳入 git，先与用户确认提交范围（接口文件 / 整个 audio_engine / 全部含 third_party），再 stage 提交。
+改动落在 soundproof 仓库（`F:/share/soundproof`），**不在 TrickRoom 仓库内**：先 cd 到 soundproof 按 `/git-commit` 流程提交，再按需更新 TrickRoom 中对 soundproof 的引用（`GIT_TAG master` 无需改动；若改为 pin tag/commit 则需在 TrickRoom 侧提交）。
 
 ## 完成标准
 

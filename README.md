@@ -12,8 +12,10 @@
   <img src="assets/Trick_Room_IX.png" alt="TrickRoom logo" width="360">
 </p>
 
-TrickRoom is a real-time voice chat room. Its voice pipeline is powered by `src/audio_engine` —
-a set of audio speech-enhancement algorithms wrapped into a unified C interface.
+TrickRoom is a real-time voice chat room. Its voice pipeline is powered by
+[soundproof](https://github.com/Ryuk17/soundproof) — a set of audio speech-enhancement
+algorithms wrapped into a unified C interface, fetched at configure time via CMake
+`FetchContent` (no vendored copy in this repository).
 
 > **Note:** Some features are still under development and the public interfaces
 > may evolve. Contributions and pull requests are welcome!
@@ -22,8 +24,8 @@ a set of audio speech-enhancement algorithms wrapped into a unified C interface.
 
 ## Audio Engine Overview
 
-`src/audio_engine` wraps audio-processing algorithms as
-self-contained C libraries named `libAE_xxx` (`.a` / `.so` / `.dll`), where `xxx` is an
+The [soundproof](https://github.com/Ryuk17/soundproof) repository wraps audio-processing
+algorithms as self-contained C libraries named `libAE_xxx` (`.a` / `.so` / `.dll`), where `xxx` is an
 uppercase abbreviation of the algorithm. Every library exposes the same design pattern:
 an opaque handle, an init config, frame-based `Process` calls, and unified error codes —
 so the whole pipeline (e.g. AEC → NS → AGC2 → SRC) can be chained from plain C.
@@ -52,57 +54,35 @@ TrickRoom/
 ├── README.md                       # English documentation (this file)
 ├── README_zh.md                    # Chinese documentation
 ├── LICENSE                         # Apache License 2.0
+├── CMakeLists.txt                  # Super build: fetches soundproof + openal/opus, builds trickroom
 ├── assets/                         # Icons and static resources
 ├── bin/                            # Prebuilt binaries and configuration files
-├── third_party/                    # Dependencies as git submodules (abseil, eigen, NE10, pffft, OpenAL, opus)
 └── src/
-    ├── *.cpp / *.h                 # Chat room application (client/server)
-    └── audio_engine/               # Unified audio algorithm libraries (libAE_xxx)
-        ├── interface/              # Public C interfaces and shared definitions
-        ├── audio_processing/       # Algorithm core implementations
-        ├── signal_processing/      # Shared DSP code (windowing, filters, FFT glue)
-        ├── utils/                  # Non-DSP utilities (WAV I/O, ring buffers, ...)
-        ├── unitest/
-        │   ├── test_ae_*.cc        # Interface tests (link against libAE_xxx)
-        │   └── internal/test_*.cc  # Reference tests calling the algorithm classes directly
-        ├── data/                   # WAV test vectors and expected outputs
-        ├── model_weights/          # Neural-network weights (e.g. RNN-VAD)
-        ├── toolchains/             # CMake toolchain files (Windows / ARM Linux)
-        └── CMakeLists.txt          # Builds all libAE_xxx libraries and tests
+    └── *.cpp / *.h                 # Chat room application (client/server)
 ```
+
+The audio-engine libraries (`libAE_xxx`) live in the separate
+[soundproof](https://github.com/Ryuk17/soundproof) repository and are pulled in
+by CMake `FetchContent` at configure time.
 
 ## Building the Audio Engine
 
-### Prerequisites
+The engine libraries are built as part of the TrickRoom super build:
+`-DBUILD_AUDIO_ENGINE=ON` (default) fetches soundproof from git
+(`GIT_TAG master`) and builds all `libAE_xxx` targets.
 
-- CMake ≥ 3.10 and a C++20 compiler
-- Git submodules initialized: `git submodule update --init`
-- **abseil-cpp** built and installed to `third_party/abseil-cpp/install`
-  (the build locates it through `find_package(absl)` via `CMAKE_PREFIX_PATH`)
-- **Eigen** is provided as a submodule (`third_party/eigen`, pinned to the 5.0.0 tag).
-  It is required by `libAE_DR` only; point `-DEIGEN3_ROOT=<path>` at another copy if desired.
-- NE10 (`neon-fft`) and pffft submodules are used by the FFT-based modules
-  (`libAE_VAD`, `libAE_NS`, `libAE_AEC`, `libAE_AECM`, `libAE_BF`, `libAE_IE`, `libAE_TS`).
-- **OpenAL Soft** (`third_party/openal-soft`) and **Opus** (`third_party/opus`)
-  submodules are used by the chat-room application, not by the engine libraries.
-
-### Configure and Build
-
-Windows (MinGW):
+To use a local soundproof checkout instead of the git fetch (recommended while
+developing the engine — local edits take effect on the next build):
 
 ```bash
-cmake -S src/audio_engine -B build -G "MinGW Makefiles" \
-      -DCMAKE_TOOLCHAIN_FILE=src/audio_engine/toolchains/x86_64-windows.cmake
-cmake --build build -j
+cmake -S . -B build -G "MinGW Makefiles" -DBUILD_TRICKROOM=ON \
+      -DFETCHCONTENT_SOURCE_DIR_SOUNDPROOF=F:/share/soundproof
 ```
 
-Cross-compiling for embedded Linux (aarch64 / armv7-NEON):
-
-```bash
-cmake -S src/audio_engine -B build-arm64 \
-      -DCMAKE_TOOLCHAIN_FILE=src/audio_engine/toolchains/aarch64-linux-gnu.toolchain.cmake
-cmake --build build-arm64 -j
-```
+The engine can also be built standalone inside its own repository — see the
+soundproof README. Soundproof fetches its own dependencies (abseil-cpp,
+neon-fft, pffft, eigen) as URL tarballs with SHA256 checksums; it requires
+CMake ≥ 3.16 and a C++20 compiler.
 
 All libraries are enabled by default. Disable individual ones with
 `-DBUILD_AE_<XXX>=OFF`, e.g. `-DBUILD_AE_DR=OFF`. Available options:
@@ -110,15 +90,16 @@ All libraries are enabled by default. Disable individual ones with
 `BUILD_AE_AECM`, `BUILD_AE_AEC`, `BUILD_AE_BF`, `BUILD_AE_HS`, `BUILD_AE_IE`,
 `BUILD_AE_TS`, `BUILD_AE_DR`.
 
-Outputs:
+Outputs (in the soundproof source/build tree):
 
-- Libraries: `src/audio_engine/lib/libAE_*.a`
-- Test executables: `src/audio_engine/bin/test_ae_*.exe`
+- Libraries: `lib/libAE_*.a`
+- Test executables: `bin/test_ae_*.exe`
 
 ## Unified C Interface
 
-All libraries follow one pattern (see `src/audio_engine/interface/audio_engine_def.h`
-for shared status codes and `audio_engine_vad.h` as the reference example):
+All libraries follow one pattern (see `interface/audio_engine_def.h` in the
+soundproof repository for shared status codes and `audio_engine_vad.h` as the
+reference example):
 
 ```c
 typedef void* VadHandle;
@@ -155,18 +136,20 @@ Conventions shared by every module:
 - Every API is instrumented with debug/warn/error logging.
 - FFT-based modules use the NE10 NEON FFT for ARM-friendly performance.
   `libAE_DR` is the deliberate exception: its EKF requires double-precision FFT
-  (Eigen), see `audio_processing/dereverberation/real_fft.h`.
+  (Eigen), see `core/dereverberation/real_fft.h` in the soundproof repository.
 
 ## Testing
 
-Two test layers under `src/audio_engine/unitest`:
+Two test layers live in the soundproof repository:
 
-- `internal/test_*.cc` — reference tests that call the algorithm classes directly
-  (the ground truth for behavior).
-- `test_ae_*.cc` — interface tests that link against `libAE_xxx` and exercise the
-  C API: normal flow, `Reset`, and error cases.
+- `soundproof/core/tests/test_*.cc` — reference tests that call the algorithm
+  classes directly (the ground truth for behavior).
+- `tests/test_ae_*.cc` — interface tests that link against `libAE_xxx` and
+  exercise the C API: normal flow, `Reset`, and error cases.
 
-Run an interface test from `src/audio_engine` (test vectors are read from `data/`):
+The interface tests are registered with CTest by the super build
+(`ctest --test-dir build`), or run standalone from the soundproof root
+(test vectors are read from `assets/`):
 
 ```bash
 ./bin/test_ae_vad.exe
@@ -174,7 +157,7 @@ Run an interface test from `src/audio_engine` (test vectors are read from `data/
 
 Consistency is enforced: interface output must be **byte-identical** to the
 reference output produced by the corresponding internal test
-(see `data/*_out.wav`).
+(see `assets/*_out.wav`).
 
 ## Cross-Platform
 
@@ -182,7 +165,7 @@ The audio engine is designed for Windows, desktop Linux and embedded Linux:
 
 - No OS-specific code in the public interfaces.
 - Toolchain files for `x86_64-windows` (MinGW), `aarch64-linux-gnu` and
-  `arm-linux-gnueabihf` (NEON) under `src/audio_engine/toolchains/`.
+  `arm-linux-gnueabihf` (NEON) under `toolchains/` in the soundproof repository.
 - AVX2 intrinsics are used in dedicated per-file implementations on x86-64
   targets (e.g. `sinc_resampler_avx2.cc`, AEC3 vector math).
 
@@ -199,12 +182,12 @@ every dependency before distributing or embedding:
 | This repository (TrickRoom)                        | Apache License 2.0                                               |
 | abseil-cpp                                         | Apache License 2.0                                               |
 | NE10 / neon-fft                                    | Apache License 2.0                                               |
-| WebRTC (`audio_processing`, `signal_processing`)   | BSD 3-Clause; a few routines are public domain (see `src/audio_engine/signal_processing/LICENSE`) |
+| WebRTC (`core`, `dsp`) — soundproof                | BSD 3-Clause; a few routines are public domain (see `soundproof/dsp/LICENSE`) |
 | pffft                                              | BSD-like permissive license                                      |
 | Eigen                                              | MPL 2.0 (a few files under BSD or other MPL2-compatible terms)   |
 | Voicebox v_spendred (libAE_DR reference)           | See the upstream [Voicebox](https://github.com/ImperialCollegeLondon/sap-voicebox) project |
-| OpenAL Soft (`third_party/openal-soft`)            | LGPL 2.0 or later                                                |
-| Opus (`third_party/opus`)                          | BSD 3-Clause                                                     |
+| OpenAL Soft                                        | LGPL 2.0 or later                                                |
+| Opus                                               | BSD 3-Clause                                                     |
 
 > This overview is provided for convenience only and does not constitute legal advice.
 

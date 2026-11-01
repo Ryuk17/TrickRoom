@@ -12,8 +12,9 @@
   <img src="assets/Trick_Room_IX.png" alt="TrickRoom logo" width="360">
 </p>
 
-TrickRoom 是一个实时语音聊天室。其语音处理管线由 `src/audio_engine` 驱动 ——
-一组封装为统一 C 接口的语音增强算法库。
+TrickRoom 是一个实时语音聊天室。其语音处理管线由
+[soundproof](https://github.com/Ryuk17/soundproof) 驱动 —— 一组封装为统一 C 接口的语音增强算法库，
+在 configure 阶段通过 CMake `FetchContent` 拉取（本仓库不再内置副本）。
 
 > **说明：** 部分功能仍在开发中，公开接口可能会调整。欢迎提交 PR 与贡献！
 
@@ -21,7 +22,7 @@ TrickRoom 是一个实时语音聊天室。其语音处理管线由 `src/audio_e
 
 ## 音频引擎简介
 
-`src/audio_engine` 将音频处理算法封装为独立的 C 库，
+[soundproof](https://github.com/Ryuk17/soundproof) 将音频处理算法封装为独立的 C 库，
 命名为 `libAE_xxx`（`.a` / `.so` / `.dll`），其中 `xxx` 为算法的大写缩写。
 所有库遵循同一设计模式：不透明句柄 + 初始化配置 + 按帧 `Process` 处理 + 统一错误码，
 因此整条处理链（如 AEC → NS → AGC2 → SRC）可以直接用纯 C 串联。
@@ -50,71 +51,46 @@ TrickRoom/
 ├── README.md                       # 英文文档
 ├── README_zh.md                    # 中文文档（本文件）
 ├── LICENSE                         # Apache License 2.0
+├── CMakeLists.txt                  # super build：拉取 soundproof + openal/opus，编译 trickroom
 ├── assets/                         # 图标等静态资源
 ├── bin/                            # 预编译程序及配置文件
-├── third_party/                    # git submodule 形式的第三方依赖（abseil、eigen、NE10、pffft、OpenAL、opus）
 └── src/
-    ├── *.cpp / *.h                 # 聊天室应用（客户端/服务端）
-    └── audio_engine/               # 统一音频算法库（libAE_xxx）
-        ├── interface/              # 对外 C 接口及公共定义
-        ├── audio_processing/       # 算法核心实现
-        ├── signal_processing/      # 公共 DSP 代码（窗函数、滤波器、FFT 封装等）
-        ├── utils/                  # 非 DSP 公共代码（WAV 读写、环形缓冲等）
-        ├── unitest/
-        │   ├── test_ae_*.cc        # 接口测试（链接 libAE_xxx）
-        │   └── internal/test_*.cc  # 直接调用算法类的内部参考测试
-        ├── data/                   # WAV 测试数据与期望输出
-        ├── model_weights/          # 神经网络权重（如 RNN-VAD）
-        ├── toolchains/             # CMake 交叉编译工具链（Windows / ARM Linux）
-        └── CMakeLists.txt          # 编译所有 libAE_xxx 库与测试
+    └── *.cpp / *.h                 # 聊天室应用（客户端/服务端）
 ```
+
+音频算法库（`libAE_xxx`）位于独立的
+[soundproof](https://github.com/Ryuk17/soundproof) 仓库，由 CMake `FetchContent`
+在 configure 阶段拉取。
 
 ## 编译音频引擎
 
-### 前置条件
+引擎库随 TrickRoom super build 一起编译：`-DBUILD_AUDIO_ENGINE=ON`（默认）
+会从 git 拉取 soundproof（`GIT_TAG master`）并编译全部 `libAE_xxx` 目标。
 
-- CMake ≥ 3.10，支持 C++20 的编译器
-- 初始化 git submodule：`git submodule update --init`
-- **abseil-cpp** 需编译并安装到 `third_party/abseil-cpp/install`
-  （构建时通过 `CMAKE_PREFIX_PATH` 的 `find_package(absl)` 定位）
-- **Eigen** 以 submodule 形式提供（`third_party/eigen`，锁定 5.0.0 tag），
-  仅 `libAE_DR` 依赖；如需使用其他副本，用 `-DEIGEN3_ROOT=<路径>` 指定
-- NE10（`neon-fft`）与 pffft submodule 供 FFT 类模块使用
-  （`libAE_VAD`、`libAE_NS`、`libAE_AEC`、`libAE_AECM`、`libAE_BF`、`libAE_IE`、`libAE_TS`）
-- **OpenAL Soft**（`third_party/openal-soft`）与 **Opus**（`third_party/opus`）
-  submodule 供聊天室应用使用，引擎库本身不依赖
-
-### 配置与编译
-
-Windows（MinGW）：
+开发引擎时可改用本地 soundproof 检出（推荐——本地改动下次编译即生效）：
 
 ```bash
-cmake -S src/audio_engine -B build -G "MinGW Makefiles" \
-      -DCMAKE_TOOLCHAIN_FILE=src/audio_engine/toolchains/x86_64-windows.cmake
-cmake --build build -j
+cmake -S . -B build -G "MinGW Makefiles" -DBUILD_TRICKROOM=ON \
+      -DFETCHCONTENT_SOURCE_DIR_SOUNDPROOF=F:/share/soundproof
 ```
 
-交叉编译嵌入式 Linux（aarch64 / armv7-NEON）：
-
-```bash
-cmake -S src/audio_engine -B build-arm64 \
-      -DCMAKE_TOOLCHAIN_FILE=src/audio_engine/toolchains/aarch64-linux-gnu.toolchain.cmake
-cmake --build build-arm64 -j
-```
+引擎也可以在 soundproof 仓库内独立编译，参见其 README。soundproof 自行拉取
+依赖（abseil-cpp、neon-fft、pffft、eigen，均为 URL tarball + SHA256 校验），
+需要 CMake ≥ 3.16 与支持 C++20 的编译器。
 
 默认全部库开启，可用 `-DBUILD_AE_<XXX>=OFF` 单独关闭（如 `-DBUILD_AE_DR=OFF`）。
 可用选项：`BUILD_AE_VAD`、`BUILD_AE_SRC`、`BUILD_AE_NS`、`BUILD_AE_AGC`、`BUILD_AE_AGC2`、
 `BUILD_AE_AECM`、`BUILD_AE_AEC`、`BUILD_AE_BF`、`BUILD_AE_HS`、`BUILD_AE_IE`、
 `BUILD_AE_TS`、`BUILD_AE_DR`。
 
-产物：
+产物（位于 soundproof 的源码/构建树内）：
 
-- 库文件：`src/audio_engine/lib/libAE_*.a`
-- 测试程序：`src/audio_engine/bin/test_ae_*.exe`
+- 库文件：`lib/libAE_*.a`
+- 测试程序：`bin/test_ae_*.exe`
 
 ## 统一 C 接口
 
-所有库遵循同一模式（公共错误码见 `src/audio_engine/interface/audio_engine_def.h`，
+所有库遵循同一模式（公共错误码见 soundproof 仓库的 `interface/audio_engine_def.h`，
 参考范例见 `audio_engine_vad.h`）：
 
 ```c
@@ -152,30 +128,31 @@ int AudioEngine_Vad_Destroy(VadHandle h);
 - 每个 API 预埋 debug/warn/error 日志。
 - FFT 类模块使用 NE10 NEON FFT，利于 ARM 平台性能。
   `libAE_DR` 是经过评审的例外：其 EKF 要求双精度 FFT（Eigen），
-  详见 `audio_processing/dereverberation/real_fft.h`。
+  详见 soundproof 仓库的 `core/dereverberation/real_fft.h`。
 
 ## 测试
 
-`src/audio_engine/unitest` 下分两层：
+测试分两层，均位于 soundproof 仓库：
 
-- `internal/test_*.cc` —— 直接调用算法类的内部参考测试（行为基准）。
-- `test_ae_*.cc` —— 链接 `libAE_xxx` 的接口测试，覆盖正常流程、`Reset` 与错误用例。
+- `soundproof/core/tests/test_*.cc` —— 直接调用算法类的内部参考测试（行为基准）。
+- `tests/test_ae_*.cc` —— 链接 `libAE_xxx` 的接口测试，覆盖正常流程、`Reset` 与错误用例。
 
-在 `src/audio_engine` 目录下运行接口测试（测试数据从 `data/` 读取）：
+接口测试由 super build 注册到 CTest（`ctest --test-dir build`），
+也可在 soundproof 根目录独立运行（测试数据从 `assets/` 读取）：
 
 ```bash
 ./bin/test_ae_vad.exe
 ```
 
 一致性要求：接口输出必须与对应内部测试的参考输出**逐字节一致**
-（见 `data/*_out.wav`）。
+（见 `assets/*_out.wav`）。
 
 ## 跨平台
 
 音频引擎面向 Windows、桌面 Linux 与嵌入式 Linux：
 
 - 对外接口不含平台相关代码。
-- `src/audio_engine/toolchains/` 提供 `x86_64-windows`（MinGW）、
+- soundproof 仓库的 `toolchains/` 提供 `x86_64-windows`（MinGW）、
   `aarch64-linux-gnu`、`arm-linux-gnueabihf`（NEON）工具链文件。
 - AVX2 指令在 x86-64 平台以独立按文件实现的方式使用
   （如 `sinc_resampler_avx2.cc`、AEC3 向量运算）。
@@ -192,12 +169,12 @@ TrickRoom 本体以 [Apache License 2.0](LICENSE) 发布。
 | 本仓库（TrickRoom）                                | Apache License 2.0                                                |
 | abseil-cpp                                        | Apache License 2.0                                                |
 | NE10 / neon-fft                                   | Apache License 2.0                                                |
-| WebRTC（`audio_processing`、`signal_processing`）  | BSD 3-Clause；少量例程为公共领域（见 `src/audio_engine/signal_processing/LICENSE`） |
+| WebRTC（`core`、`dsp`）—— soundproof            | BSD 3-Clause；少量例程为公共领域（见 soundproof 的 `soundproof/dsp/LICENSE`） |
 | pffft                                             | BSD 类宽松许可证                                                  |
 | Eigen                                             | MPL 2.0（少量文件为 BSD 或其他与 MPL2 兼容的条款）                |
 | Voicebox v_spendred（libAE_DR 参考实现）           | 参见上游 [Voicebox](https://github.com/ImperialCollegeLondon/sap-voicebox) 项目 |
-| OpenAL Soft（`third_party/openal-soft`）           | LGPL 2.0 或更高版本                                                |
-| Opus（`third_party/opus`）                         | BSD 3-Clause                                                       |
+| OpenAL Soft                                        | LGPL 2.0 或更高版本                                                |
+| Opus                                               | BSD 3-Clause                                                       |
 
 > 以上信息仅为方便说明，不构成法律建议。
 
