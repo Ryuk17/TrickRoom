@@ -531,11 +531,20 @@ void Audio::push_farend(const short *farend, int samples)
 		return;
 
 	/* Upsample remote PCM 16k → 48k (AEC requires render at 48k) */
-	int up_sz = 0;
-	if (AudioEngine_Resample_Process(src_farend_, farend, samples,
-	                                 farend_tmp_, F_AREND_UP_MAX, &up_sz) != AUDIO_ENGINE_SUCCESS
-	    || up_sz <= 0)
+	ResampleInput_t in;
+	in.audio_in		= farend;
+	in.in_samples	= samples;
+
+	ResampleResult_t out;
+	out.audio_out		= farend_tmp_;
+	out.max_out_samples	= F_AREND_UP_MAX;
+	out.out_samples		= 0;
+
+	if (AudioEngine_Resample_Process(src_farend_, &in, &out) != AUDIO_ENGINE_SUCCESS
+	    || out.out_samples <= 0)
 		return;
+
+	int up_sz = out.out_samples;
 
 	/* Ring write with wrap */
 	int pos = farend_wr_ % F_AREND_BUF_SIZE;
@@ -573,7 +582,6 @@ int Audio::process_pipeline(const short *in, int in_samples,
 	for (int f = 0; f < n_frames; f++)
 	{
 		const short *nearend = in + f * PIPELINE_FRAME_SIZE;
-		int out_sz = 0;
 
 		/* Pull one 480-sample far-end frame from the ring (wrap at end) */
 		int pos = farend_rd_ % F_AREND_BUF_SIZE;
@@ -594,43 +602,75 @@ int Audio::process_pipeline(const short *in, int in_samples,
 		wav_aec_nearend_->WriteSamples(nearend, PIPELINE_FRAME_SIZE);
 		wav_aec_farend_->WriteSamples(farend, PIPELINE_FRAME_SIZE);
 #endif
-		if (AudioEngine_Aec_Process(aec_, nearend, farend, PIPELINE_FRAME_SIZE,
-		                            tmp_aec, PIPELINE_FRAME_SIZE, &out_sz) != AUDIO_ENGINE_SUCCESS
-		    || out_sz != PIPELINE_FRAME_SIZE)
+		AecInput_t aec_in;
+		aec_in.nearend_in	= nearend;
+		aec_in.farend_in	= farend;
+		aec_in.in_samples	= PIPELINE_FRAME_SIZE;
+
+		AecResult_t aec_out;
+		aec_out.audio_out		= tmp_aec;
+		aec_out.max_out_samples	= PIPELINE_FRAME_SIZE;
+		aec_out.out_samples		= 0;
+
+		if (AudioEngine_Aec_Process(aec_, &aec_in, &aec_out) != AUDIO_ENGINE_SUCCESS
+		    || aec_out.out_samples != PIPELINE_FRAME_SIZE)
 			break;
 
 		/* Stage 2: NS */
 #ifdef AUDIO_DEBUG_DUMP
 		wav_ns_in_->WriteSamples(tmp_aec, PIPELINE_FRAME_SIZE);
 #endif
-		if (AudioEngine_Ns_Process(ns_, tmp_aec, PIPELINE_FRAME_SIZE,
-		                           tmp_ns, PIPELINE_FRAME_SIZE, &out_sz) != AUDIO_ENGINE_SUCCESS
-		    || out_sz != PIPELINE_FRAME_SIZE)
+		NsInput_t ns_in;
+		ns_in.audio_in		= tmp_aec;
+		ns_in.in_samples	= PIPELINE_FRAME_SIZE;
+
+		NsResult_t ns_out;
+		ns_out.audio_out		= tmp_ns;
+		ns_out.max_out_samples	= PIPELINE_FRAME_SIZE;
+		ns_out.out_samples		= 0;
+
+		if (AudioEngine_Ns_Process(ns_, &ns_in, &ns_out) != AUDIO_ENGINE_SUCCESS
+		    || ns_out.out_samples != PIPELINE_FRAME_SIZE)
 			break;
 
 		/* Stage 3: AGC2 */
 #ifdef AUDIO_DEBUG_DUMP
 		wav_agc2_in_->WriteSamples(tmp_ns, PIPELINE_FRAME_SIZE);
 #endif
-		if (AudioEngine_Agc2_Process(agc2_, tmp_ns, PIPELINE_FRAME_SIZE,
-		                             tmp_agc2, PIPELINE_FRAME_SIZE, &out_sz) != AUDIO_ENGINE_SUCCESS
-		    || out_sz != PIPELINE_FRAME_SIZE)
+		Agc2Input_t agc2_in;
+		agc2_in.audio_in	= tmp_ns;
+		agc2_in.in_samples	= PIPELINE_FRAME_SIZE;
+
+		Agc2Result_t agc2_out;
+		agc2_out.audio_out		= tmp_agc2;
+		agc2_out.max_out_samples	= PIPELINE_FRAME_SIZE;
+		agc2_out.out_samples		= 0;
+
+		if (AudioEngine_Agc2_Process(agc2_, &agc2_in, &agc2_out) != AUDIO_ENGINE_SUCCESS
+		    || agc2_out.out_samples != PIPELINE_FRAME_SIZE)
 			break;
 
 		/* Stage 4: SRC 48k → 16k */
 #ifdef AUDIO_DEBUG_DUMP
 		wav_src_in_->WriteSamples(tmp_agc2, PIPELINE_FRAME_SIZE);
 #endif
-		if (AudioEngine_Resample_Process(src_, tmp_agc2, PIPELINE_FRAME_SIZE,
-		                                 out + total_out, max_out_samples - total_out,
-		                                 &out_sz) != AUDIO_ENGINE_SUCCESS
-		    || out_sz != PIPELINE_SRC_OUT)
+		ResampleInput_t src_in;
+		src_in.audio_in		= tmp_agc2;
+		src_in.in_samples	= PIPELINE_FRAME_SIZE;
+
+		ResampleResult_t src_out;
+		src_out.audio_out		= out + total_out;
+		src_out.max_out_samples	= max_out_samples - total_out;
+		src_out.out_samples		= 0;
+
+		if (AudioEngine_Resample_Process(src_, &src_in, &src_out) != AUDIO_ENGINE_SUCCESS
+		    || src_out.out_samples != PIPELINE_SRC_OUT)
 			break;
 #ifdef AUDIO_DEBUG_DUMP
-		wav_src_out_->WriteSamples(out + total_out, out_sz);
+		wav_src_out_->WriteSamples(out + total_out, src_out.out_samples);
 #endif
 
-		total_out += out_sz;
+		total_out += src_out.out_samples;
 	}
 
 	return total_out;
